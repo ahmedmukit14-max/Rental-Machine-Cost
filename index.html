@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rental Machine Cost Comparison 2025 vs 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0A0E1A; color: #E7ECF7; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; padding: 24px; min-height: 100vh; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .header {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+      background: #111726; border: 1px solid #232B41; border-radius: 14px; padding: 18px 24px; margin-bottom: 24px;
+    }
+    .header h1 { font-weight: 700; font-size: 22px; color: #2FD9C4; }
+    .header h1 span { color: #E7ECF7; font-weight: 400; }
+    .filter-list {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      background: #161D2F; padding: 8px 12px; border-radius: 30px; border: 1px solid #232B41;
+    }
+    .filter-btn {
+      background: transparent; color: #8B93AA; border: none; padding: 4px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+    }
+    .filter-btn:hover { color: #E7ECF7; background: rgba(47,217,196,0.08); }
+    .filter-btn.active { background: #2FD9C4; color: #0A0E1A; box-shadow: 0 0 16px rgba(47,217,196,0.25); }
+    .card { background: #111726; border: 1px solid #232B41; border-radius: 14px; padding: 20px 24px 24px; margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .card-sub { font-size: 13px; color: #8B93AA; margin-bottom: 16px; }
+    .chart-container { position: relative; height: 420px; }
+    .legend-note { margin-top: 12px; font-size: 12px; color: #8B93AA; text-align: center; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 16px; }
+    .stat-box { background: #161D2F; border-radius: 10px; padding: 12px 16px; text-align: center; border: 1px solid #232B41; }
+    .stat-box .label { font-size: 11px; text-transform: uppercase; color: #8B93AA; letter-spacing: 0.3px; }
+    .stat-box .value { font-size: 22px; font-weight: 700; color: #2FD9C4; margin-top: 4px; }
+    .stat-box .value.amber { color: #F5B84D; }
+    .stat-box .value.violet { color: #8C7CF6; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📊 Rental Machine Cost Comparison <span>2025 vs 2026</span></h1>
+    <div class="filter-list" id="filterList">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="DGL">DGL</button>
+      <button class="filter-btn" data-filter="DRL">DRL</button>
+      <button class="filter-btn" data-filter="DFL">DFL</button>
+      <button class="filter-btn" data-filter="AFL">AFL</button>
+      <button class="filter-btn" data-filter="GGL">GGL</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Monthly Revenue (BDT)</div>
+    <div class="card-sub">2025 (Jan–Dec) vs 2026 (Jan–Jul)</div>
+    <div class="chart-container">
+      <canvas id="revenueChart"></canvas>
+    </div>
+    <div class="legend-note" id="chartNote">Showing total for all factories</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Yearly Totals</div>
+    <div class="summary-grid" id="summaryStats"></div>
+  </div>
+
+</div>
+
+<script>
+// --- 1. DATA ---
+const data2025 = {
+  months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  DGL: [1445400, 1249860, 1080690, 1036340, 1278170, 990870, 1545270, 1735350, 2035222, 2562790, 2319440, 2711150],
+  DRL: [313800, 206440, 74040, 74360, 171700, 84400, 105100, 33200, 104400, 166000, 198200, 173260],
+  DFL: [56950, 87500, 37300, 22680, 92140, 69400, 101000, 10000, 30000, 65000, 60000, 70000],
+  AFL: [257700, 39160, 48420, 62500, 115000, 145310, 134780, 80000, 184000, 189000, 154000, 142000],
+  GGL: [148380, 147100, 56840, 48710, 177010, 168210, 120480, 109040, 271710, 196960, 298010, 334460]
+};
+
+const data2026 = {
+  months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+  DGL: [2280500, 1485870, 1167550, 1864320, 1844040, 1199440, 888160],
+  DRL: [133690, 83760, 21500, 43400, 113750, 166560, 94360],
+  DFL: [68500, 28400, 22220, 25500, 48100, 39600, 69990],
+  AFL: [264790, 136340, 155440, 211050, 236130, 293620, 262150],
+  GGL: [292150, 95730, 256670, 179170, 154500, 143760, 166120]
+};
+
+// --- 2. Pad 2026 to 12 months with null ---
+const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
+
+function padYearData(yearData) {
+  const padded = { months: allMonths };
+  for (const f of factories) {
+    const existing = yearData[f] || [];
+    const arr = [];
+    for (let i = 0; i < 12; i++) {
+      arr.push(i < existing.length ? existing[i] : null);
+    }
+    padded[f] = arr;
+  }
+  return padded;
+}
+
+const y2025 = padYearData(data2025);
+const y2026 = padYearData(data2026);
+
+// --- 3. TOTALS – return null if no data for that month ---
+function getTotals(yearData) {
+  const totals = [];
+  for (let i = 0; i < 12; i++) {
+    let sum = 0;
+    let hasData = false;
+    for (const f of factories) {
+      const val = yearData[f][i];
+      if (val !== null && val !== undefined) {
+        sum += val;
+        hasData = true;
+      }
+    }
+    totals.push(hasData ? sum : null);
+  }
+  return totals;
+}
+
+const total2025 = getTotals(y2025);
+const total2026 = getTotals(y2026);
+
+// --- 4. Chart Setup ---
+const ctx = document.getElementById('revenueChart').getContext('2d');
+let chart;
+
+function getDatasets(filter) {
+  if (filter === 'all') {
+    return [
+      {
+        label: '2025 Total',
+        data: total2025,
+        borderColor: '#2FD9C4',
+        backgroundColor: 'rgba(47,217,196,0.1)',
+        tension: 0.2,
+        pointRadius: 4,
+        pointBackgroundColor: '#2FD9C4',
+        spanGaps: false,
+        fill: false,
+      },
+      {
+        label: '2026 Total',
+        data: total2026,
+        borderColor: '#F5B84D',
+        backgroundColor: 'rgba(245,184,77,0.1)',
+        tension: 0.2,
+        pointRadius: 4,
+        pointBackgroundColor: '#F5B84D',
+        spanGaps: false,
+        fill: false,
+      }
+    ];
+  } else {
+    const data25 = y2025[filter];
+    const data26 = y2026[filter];
+    return [
+      {
+        label: `2025 ${filter}`,
+        data: data25,
+        borderColor: '#2FD9C4',
+        backgroundColor: 'rgba(47,217,196,0.1)',
+        tension: 0.2,
+        pointRadius: 4,
+        pointBackgroundColor: '#2FD9C4',
+        spanGaps: false,
+        fill: false,
+      },
+      {
+        label: `2026 ${filter}`,
+        data: data26,
+        borderColor: '#F5B84D',
+        backgroundColor: 'rgba(245,184,77,0.1)',
+        tension: 0.2,
+        pointRadius: 4,
+        pointBackgroundColor: '#F5B84D',
+        spanGaps: false,
+        fill: false,
+      }
+    ];
+  }
+}
+
+function renderChart(filter) {
+  const datasets = getDatasets(filter);
+  if (chart) chart.destroy();
+
+  Chart.register(ChartDataLabels);
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: allMonths,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#E7ECF7', font: { size: 12 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              if (context.parsed.y === null) return null;
+              let label = context.dataset.label || '';
+              if (label) label += ': ';
+              label += new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'BDT',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              }).format(context.parsed.y);
+              return label;
+            }
+          }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#E7ECF7',
+          font: { size: 9, weight: 'bold' },
+          formatter: function(value) {
+            if (value === null || value === 0) return '';
+            return (value / 1000000).toFixed(1) + 'M';
+          },
+          offset: 2
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8B93AA' },
+          grid: { color: '#232B41' }
+        },
+        y: {
+          ticks: { 
+            color: '#8B93AA',
+            callback: function(value) {
+              return 'BDT ' + (value/1000000).toFixed(1) + 'M';
+            }
+          },
+          grid: { color: '#232B41' }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+  document.getElementById('chartNote').textContent = 
+    filter === 'all' ? 'Showing total for all factories combined' : `Showing data for ${filter} only`;
+}
+
+// --- 5. Filter Buttons ---
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const filter = this.dataset.filter;
+    renderChart(filter);
+    updateSummary(filter);
+  });
+});
+
+// --- 6. Summary Stats ---
+function updateSummary(filter) {
+  const summaryDiv = document.getElementById('summaryStats');
+  let sum2025, sum2026;
+
+  if (filter === 'all') {
+    sum2025 = total2025.reduce((a,b) => a + (b || 0), 0);
+    sum2026 = total2026.reduce((a,b) => a + (b || 0), 0);
+  } else {
+    sum2025 = y2025[filter].reduce((a,b) => a + (b || 0), 0);
+    sum2026 = y2026[filter].reduce((a,b) => a + (b || 0), 0);
+  }
+
+  const change = ((sum2026 - sum2025) / sum2025 * 100);
+  summaryDiv.innerHTML = `
+    <div class="stat-box">
+      <div class="label">2025 Total</div>
+      <div class="value">BDT ${(sum2025/1000000).toFixed(1)}M</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">2026 Total</div>
+      <div class="value amber">BDT ${(sum2026/1000000).toFixed(1)}M</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">% Change</div>
+      <div class="value violet">${change.toFixed(1)}%</div>
+    </div>
+  `;
+}
+
+// --- 7. Initial Render ---
+renderChart('all');
+updateSummary('all');
+</script>
+</body>
+</html>
