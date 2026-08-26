@@ -123,13 +123,13 @@
       margin-top: 4px;
     }
     .stat-box .value.positive {
-      color: #4CAF50; /* green */
+      color: #4CAF50;
     }
     .stat-box .value.negative {
-      color: #F44336; /* red */
+      color: #F44336;
     }
     .stat-box .value.neutral {
-      color: #8C7CF6; /* violet for zero */
+      color: #8C7CF6;
     }
 
     .card {
@@ -373,7 +373,8 @@
             font: { size: 9, weight: 'bold' },
             formatter: function(value) {
               if (value === null || value === 0) return '';
-              return (value / 1000000).toFixed(1) + 'M';
+              // ✅ Changed to 2 decimal places
+              return (value / 1000000).toFixed(2) + 'M';
             },
             offset: 2
           }
@@ -381,7 +382,11 @@
         scales: {
           x: { ticks: { color: '#8B93AA' }, grid: { color: '#232B41' } },
           y: {
-            ticks: { color: '#8B93AA', callback: value => 'BDT ' + (value/1000000).toFixed(1) + 'M' },
+            ticks: {
+              color: '#8B93AA',
+              // ✅ Changed to 2 decimal places
+              callback: value => 'BDT ' + (value/1000000).toFixed(2) + 'M'
+            },
             grid: { color: '#232B41' }
           }
         }
@@ -410,19 +415,16 @@
       sum2026 = janJulIndices.reduce((acc, i) => acc + (y2026[filter][i] || 0), 0);
     }
 
-    // Standard percentage change: (new - old) / old * 100
     const stdChange = ((sum2026 - sum2025) / sum2025) * 100;
-    // Reversed sign: we want positive when costs decreased, negative when costs increased
     const displayedChange = -stdChange;
 
-    // Build formatted string with sign
     let changeText = '';
     let changeClass = 'neutral';
     if (displayedChange > 0) {
       changeText = '+' + displayedChange.toFixed(1) + '%';
       changeClass = 'positive';
     } else if (displayedChange < 0) {
-      changeText = displayedChange.toFixed(1) + '%'; // includes minus sign
+      changeText = displayedChange.toFixed(1) + '%';
       changeClass = 'negative';
     } else {
       changeText = '0.0%';
