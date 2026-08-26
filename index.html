@@ -7,7 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
-    /* All styles remain unchanged */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0A0E1A;
@@ -301,7 +300,6 @@
   const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
 
-  // Pad actual 2026 with nulls for Aug–Dec
   function padYearData(yearData, fillNull = true) {
     const padded = { months: allMonths };
     for (const f of factories) {
@@ -332,8 +330,8 @@
     return projected;
   }
 
-  const y2025Padded = padYearData(data2025, false); // 2025 full data
-  const y2026Actual = padYearData(data2026, true); // actual with nulls after Jul
+  const y2025Padded = padYearData(data2025, false);
+  const y2026Actual = padYearData(data2026, true);
   const y2026Projected = createProjectedData(y2026Actual);
 
   function getTotals(yearData) {
@@ -368,8 +366,33 @@
     const year2026Data = (mode === 'projection') ? y2026Projected : y2026Actual;
     const total2026 = (mode === 'projection') ? total2026Projected : total2026Actual;
 
-    // Determine borderDash for 2026 dataset
-    const dashPattern = (mode === 'projection') ? [6, 4] : [];
+    // For 2026 dataset, we may add segment styling
+    const baseDataset2026 = {
+      label: `2026 ${mode === 'projection' ? 'Projected' : 'Actual'}`,
+      data: total2026,
+      borderColor: '#F5B84D',
+      backgroundColor: 'rgba(245,184,77,0.1)',
+      tension: 0.2,
+      pointRadius: 4,
+      pointBackgroundColor: '#F5B84D',
+      spanGaps: false,
+      fill: false,
+    };
+
+    // If projection mode, add segment to dash only from August (index 7)
+    if (mode === 'projection') {
+      baseDataset2026.segment = {
+        borderDash: (ctx) => {
+          // ctx.p0DataIndex is the start index of the segment
+          const start = ctx.p0DataIndex;
+          // Dash for segments starting at index 7 or later (August onwards)
+          return start >= 7 ? [6, 4] : [];
+        }
+      };
+    } else {
+      // For actual, no dash
+      baseDataset2026.segment = undefined;
+    }
 
     if (filter === 'all') {
       return [
@@ -383,20 +406,8 @@
           pointBackgroundColor: '#2FD9C4',
           spanGaps: false,
           fill: false,
-          borderDash: [], // solid
         },
-        {
-          label: `2026 ${mode === 'projection' ? 'Projected' : 'Actual'}`,
-          data: total2026,
-          borderColor: '#F5B84D',
-          backgroundColor: 'rgba(245,184,77,0.1)',
-          tension: 0.2,
-          pointRadius: 4,
-          pointBackgroundColor: '#F5B84D',
-          spanGaps: false,
-          fill: false,
-          borderDash: dashPattern,
-        }
+        baseDataset2026
       ];
     } else {
       const data25 = y2025Padded[filter];
@@ -412,19 +423,11 @@
           pointBackgroundColor: '#2FD9C4',
           spanGaps: false,
           fill: false,
-          borderDash: [],
         },
         {
+          ...baseDataset2026,
           label: `2026 ${filter} (${mode === 'projection' ? 'Projected' : 'Actual'})`,
           data: data26,
-          borderColor: '#F5B84D',
-          backgroundColor: 'rgba(245,184,77,0.1)',
-          tension: 0.2,
-          pointRadius: 4,
-          pointBackgroundColor: '#F5B84D',
-          spanGaps: false,
-          fill: false,
-          borderDash: dashPattern,
         }
       ];
     }
@@ -496,25 +499,15 @@
   }
 
   // =============================
-  // SUMMARY CARDS (UPDATED)
+  // SUMMARY CARDS
   // =============================
   function updateSummary(filter, mode) {
     const container = document.getElementById('summaryStats');
-
-    // Helper to sum an array over a range of indices
-    function sumArray(arr, start, end) {
-      let s = 0;
-      for (let i = start; i <= end; i++) {
-        s += arr[i] || 0;
-      }
-      return s;
-    }
 
     let sum2025, sum2026;
     let label2025, label2026;
 
     if (mode === 'actual') {
-      // Actual mode: use Jan–Jul (indices 0–6) for both years
       const indices = [0,1,2,3,4,5,6];
       if (filter === 'all') {
         sum2025 = indices.reduce((acc, i) => acc + (total2025[i] || 0), 0);
@@ -526,7 +519,6 @@
       label2025 = '2025 Total (Jan–Jul)';
       label2026 = '2026 Actual (Jan–Jul)';
     } else {
-      // Projection mode: use full year (all 12 months) for both
       if (filter === 'all') {
         sum2025 = total2025.reduce((acc, v) => acc + (v || 0), 0);
         sum2026 = total2026Projected.reduce((acc, v) => acc + (v || 0), 0);
@@ -538,7 +530,6 @@
       label2026 = '2026 Projected (Full Year)';
     }
 
-    // Cost change (reversed sign)
     const stdChange = ((sum2026 - sum2025) / sum2025) * 100;
     const displayedChange = -stdChange;
 
@@ -572,9 +563,8 @@
   }
 
   // =============================
-  // MODE & FILTER TOGGLES
+  // TOGGLES
   // =============================
-
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -596,7 +586,7 @@
   });
 
   // =============================
-  // INITIAL RENDER
+  // INIT
   // =============================
   renderChart('all', 'actual');
   updateSummary('all', 'actual');
