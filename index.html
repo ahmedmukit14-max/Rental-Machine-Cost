@@ -100,7 +100,7 @@
     /* ───────── Main content ───────── */
     .main-content {
       flex: 1;
-      min-width: 0; /* prevent overflow */
+      min-width: 0;
     }
 
     /* ───────── 3 summary cards (row) ───────── */
@@ -189,7 +189,7 @@
 <body>
 <div class="wrap">
 
-  <!-- Header (title only) -->
+  <!-- Header -->
   <div class="header">
     <h1>📊 Rental Machine Cost Comparison <span>2025 vs 2026</span></h1>
   </div>
@@ -197,7 +197,7 @@
   <!-- Sidebar + main content -->
   <div class="dashboard-layout">
 
-    <!-- SIDEBAR: Filters -->
+    <!-- SIDEBAR -->
     <aside class="filter-sidebar">
       <h3>🏭 Factories</h3>
       <div class="filter-list" id="filterList">
@@ -210,10 +210,10 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT: Cards (3) THEN Chart -->
+    <!-- MAIN CONTENT -->
     <main class="main-content">
 
-      <!-- 3 Summary Cards (before chart) -->
+      <!-- 3 Summary Cards -->
       <div class="summary-cards" id="summaryStats">
         <!-- Will be filled by JavaScript -->
       </div>
@@ -234,7 +234,7 @@
 
 <script>
   // =============================
-  //  DATA (unchanged)
+  //  DATA
   // =============================
   const data2025 = {
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -257,6 +257,7 @@
   const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
 
+  // Pad 2026 data to 12 months with nulls for months > Jul
   function padYearData(yearData) {
     const padded = { months: allMonths };
     for (const f of factories) {
@@ -273,6 +274,7 @@
   const y2025 = padYearData(data2025);
   const y2026 = padYearData(data2026);
 
+  // Compute totals per month (including null for months beyond Jul in 2026)
   function getTotals(yearData) {
     const totals = [];
     for (let i = 0; i < 12; i++) {
@@ -289,7 +291,7 @@
   const total2026 = getTotals(y2026);
 
   // =============================
-  //  CHART
+  //  CHART (unchanged – shows all months)
   // =============================
   const ctx = document.getElementById('revenueChart').getContext('2d');
   let chart;
@@ -406,32 +408,39 @@
   }
 
   // =============================
-  //  SUMMARY CARDS (3)
+  //  SUMMARY CARDS (UPDATED: only Jan–Jul)
   // =============================
   function updateSummary(filter) {
     const container = document.getElementById('summaryStats');
+    
+    // Define the indices for Jan–Jul (0 to 6)
+    const janJulIndices = [0, 1, 2, 3, 4, 5, 6];
+    
     let sum2025, sum2026;
 
     if (filter === 'all') {
-      sum2025 = total2025.reduce((a,b) => a + (b || 0), 0);
-      sum2026 = total2026.reduce((a,b) => a + (b || 0), 0);
+      // Sum only Jan–Jul from the total arrays
+      sum2025 = janJulIndices.reduce((acc, i) => acc + (total2025[i] || 0), 0);
+      sum2026 = janJulIndices.reduce((acc, i) => acc + (total2026[i] || 0), 0);
     } else {
-      sum2025 = y2025[filter].reduce((a,b) => a + (b || 0), 0);
-      sum2026 = y2026[filter].reduce((a,b) => a + (b || 0), 0);
+      // Sum only Jan–Jul for the selected factory
+      sum2025 = janJulIndices.reduce((acc, i) => acc + (y2025[filter][i] || 0), 0);
+      sum2026 = janJulIndices.reduce((acc, i) => acc + (y2026[filter][i] || 0), 0);
     }
 
     const change = ((sum2026 - sum2025) / sum2025 * 100);
+    
     container.innerHTML = `
       <div class="stat-box">
-        <div class="label">2025 Total</div>
+        <div class="label">2025 Total (Jan–Jul)</div>
         <div class="value">BDT ${(sum2025/1000000).toFixed(1)}M</div>
       </div>
       <div class="stat-box">
-        <div class="label">2026 Total</div>
+        <div class="label">2026 Total (Jan–Jul)</div>
         <div class="value amber">BDT ${(sum2026/1000000).toFixed(1)}M</div>
       </div>
       <div class="stat-box">
-        <div class="label">% Change</div>
+        <div class="label">% Change (Jan–Jul)</div>
         <div class="value violet">${change.toFixed(1)}%</div>
       </div>
     `;
