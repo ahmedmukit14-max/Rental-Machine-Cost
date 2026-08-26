@@ -7,7 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
-    /* ───────── Reset & base ───────── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0A0E1A;
@@ -21,7 +20,6 @@
       margin: 0 auto;
     }
 
-    /* ───────── Header (title only) ───────── */
     .header {
       display: flex;
       justify-content: space-between;
@@ -42,14 +40,12 @@
       font-weight: 400;
     }
 
-    /* ───────── Sidebar + main layout ───────── */
     .dashboard-layout {
       display: flex;
       gap: 24px;
       align-items: flex-start;
     }
 
-    /* ───────── Sidebar (filters) ───────── */
     .filter-sidebar {
       width: 220px;
       flex-shrink: 0;
@@ -97,13 +93,11 @@
       box-shadow: 0 0 16px rgba(47,217,196,0.25);
     }
 
-    /* ───────── Main content ───────── */
     .main-content {
       flex: 1;
       min-width: 0;
     }
 
-    /* ───────── 3 summary cards (row) ───────── */
     .summary-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -126,17 +120,18 @@
     .stat-box .value {
       font-size: 26px;
       font-weight: 700;
-      color: #2FD9C4;
       margin-top: 4px;
     }
-    .stat-box .value.amber {
-      color: #F5B84D;
+    .stat-box .value.positive {
+      color: #4CAF50; /* green */
     }
-    .stat-box .value.violet {
-      color: #8C7CF6;
+    .stat-box .value.negative {
+      color: #F44336; /* red */
+    }
+    .stat-box .value.neutral {
+      color: #8C7CF6; /* violet for zero */
     }
 
-    /* ───────── Chart card ───────── */
     .card {
       background: #111726;
       border: 1px solid #232B41;
@@ -164,7 +159,6 @@
       text-align: center;
     }
 
-    /* ───────── Responsive ───────── */
     @media (max-width: 768px) {
       .dashboard-layout {
         flex-direction: column;
@@ -189,15 +183,12 @@
 <body>
 <div class="wrap">
 
-  <!-- Header -->
   <div class="header">
     <h1>📊 Rental Machine Cost Comparison <span>2025 vs 2026</span></h1>
   </div>
 
-  <!-- Sidebar + main content -->
   <div class="dashboard-layout">
 
-    <!-- SIDEBAR -->
     <aside class="filter-sidebar">
       <h3>🏭 Factories</h3>
       <div class="filter-list" id="filterList">
@@ -210,15 +201,12 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
 
-      <!-- 3 Summary Cards -->
       <div class="summary-cards" id="summaryStats">
-        <!-- Will be filled by JavaScript -->
+        <!-- Filled by JavaScript -->
       </div>
 
-      <!-- Chart Card -->
       <div class="card">
         <div class="card-title">Monthly Cost (BDT)</div>
         <div class="card-sub">2025 (Jan–Dec) vs 2026 (Jan–Jul)</div>
@@ -234,7 +222,7 @@
 
 <script>
   // =============================
-  //  DATA
+  // DATA
   // =============================
   const data2025 = {
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -257,7 +245,6 @@
   const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
 
-  // Pad 2026 data to 12 months with nulls for months > Jul
   function padYearData(yearData) {
     const padded = { months: allMonths };
     for (const f of factories) {
@@ -274,7 +261,6 @@
   const y2025 = padYearData(data2025);
   const y2026 = padYearData(data2026);
 
-  // Compute totals per month (including null for months beyond Jul in 2026)
   function getTotals(yearData) {
     const totals = [];
     for (let i = 0; i < 12; i++) {
@@ -291,7 +277,7 @@
   const total2026 = getTotals(y2026);
 
   // =============================
-  //  CHART (unchanged – shows all months)
+  // CHART
   // =============================
   const ctx = document.getElementById('revenueChart').getContext('2d');
   let chart;
@@ -408,28 +394,41 @@
   }
 
   // =============================
-  //  SUMMARY CARDS (UPDATED: only Jan–Jul)
+  // SUMMARY CARDS (with reversed change)
   // =============================
   function updateSummary(filter) {
     const container = document.getElementById('summaryStats');
-    
-    // Define the indices for Jan–Jul (0 to 6)
     const janJulIndices = [0, 1, 2, 3, 4, 5, 6];
-    
+
     let sum2025, sum2026;
 
     if (filter === 'all') {
-      // Sum only Jan–Jul from the total arrays
       sum2025 = janJulIndices.reduce((acc, i) => acc + (total2025[i] || 0), 0);
       sum2026 = janJulIndices.reduce((acc, i) => acc + (total2026[i] || 0), 0);
     } else {
-      // Sum only Jan–Jul for the selected factory
       sum2025 = janJulIndices.reduce((acc, i) => acc + (y2025[filter][i] || 0), 0);
       sum2026 = janJulIndices.reduce((acc, i) => acc + (y2026[filter][i] || 0), 0);
     }
 
-    const change = ((sum2026 - sum2025) / sum2025 * 100);
-    
+    // Standard percentage change: (new - old) / old * 100
+    const stdChange = ((sum2026 - sum2025) / sum2025) * 100;
+    // Reversed sign: we want positive when costs decreased, negative when costs increased
+    const displayedChange = -stdChange;
+
+    // Build formatted string with sign
+    let changeText = '';
+    let changeClass = 'neutral';
+    if (displayedChange > 0) {
+      changeText = '+' + displayedChange.toFixed(1) + '%';
+      changeClass = 'positive';
+    } else if (displayedChange < 0) {
+      changeText = displayedChange.toFixed(1) + '%'; // includes minus sign
+      changeClass = 'negative';
+    } else {
+      changeText = '0.0%';
+      changeClass = 'neutral';
+    }
+
     container.innerHTML = `
       <div class="stat-box">
         <div class="label">2025 Total (Jan–Jul)</div>
@@ -440,14 +439,14 @@
         <div class="value amber">BDT ${(sum2026/1000000).toFixed(1)}M</div>
       </div>
       <div class="stat-box">
-        <div class="label">Cost Increase/Decrease % (Jan–Jul)</div>
-        <div class="value violet">${change.toFixed(1)}%</div>
+        <div class="label">Cost Change (Jan–Jul)</div>
+        <div class="value ${changeClass}">${changeText}</div>
       </div>
     `;
   }
 
   // =============================
-  //  FILTER BUTTON EVENTS
+  // FILTER EVENTS
   // =============================
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -460,7 +459,7 @@
   });
 
   // =============================
-  //  INITIAL RENDER
+  // INITIAL RENDER
   // =============================
   renderChart('all');
   updateSummary('all');
