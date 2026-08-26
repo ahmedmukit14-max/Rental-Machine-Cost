@@ -368,6 +368,9 @@
     const year2026Data = (mode === 'projection') ? y2026Projected : y2026Actual;
     const total2026 = (mode === 'projection') ? total2026Projected : total2026Actual;
 
+    // Determine borderDash for 2026 dataset
+    const dashPattern = (mode === 'projection') ? [6, 4] : [];
+
     if (filter === 'all') {
       return [
         {
@@ -380,6 +383,7 @@
           pointBackgroundColor: '#2FD9C4',
           spanGaps: false,
           fill: false,
+          borderDash: [], // solid
         },
         {
           label: `2026 ${mode === 'projection' ? 'Projected' : 'Actual'}`,
@@ -391,6 +395,7 @@
           pointBackgroundColor: '#F5B84D',
           spanGaps: false,
           fill: false,
+          borderDash: dashPattern,
         }
       ];
     } else {
@@ -407,6 +412,7 @@
           pointBackgroundColor: '#2FD9C4',
           spanGaps: false,
           fill: false,
+          borderDash: [],
         },
         {
           label: `2026 ${filter} (${mode === 'projection' ? 'Projected' : 'Actual'})`,
@@ -418,6 +424,7 @@
           pointBackgroundColor: '#F5B84D',
           spanGaps: false,
           fill: false,
+          borderDash: dashPattern,
         }
       ];
     }
