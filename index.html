@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
+    /* All styles remain unchanged */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0A0E1A;
@@ -19,7 +20,6 @@
       max-width: 1400px;
       margin: 0 auto;
     }
-
     .header {
       display: flex;
       justify-content: space-between;
@@ -39,13 +39,11 @@
       color: #E7ECF7;
       font-weight: 400;
     }
-
     .dashboard-layout {
       display: flex;
       gap: 24px;
       align-items: flex-start;
     }
-
     .filter-sidebar {
       width: 220px;
       flex-shrink: 0;
@@ -92,17 +90,15 @@
       color: #0A0E1A;
       box-shadow: 0 0 16px rgba(47,217,196,0.25);
     }
-
     .main-content {
       flex: 1;
       min-width: 0;
     }
-
     .summary-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
     .stat-box {
       background: #111726;
@@ -131,7 +127,53 @@
     .stat-box .value.neutral {
       color: #8C7CF6;
     }
-
+    .stat-box .value.amber {
+      color: #F5B84D;
+    }
+    .mode-card {
+      background: #111726;
+      border: 1px solid #232B41;
+      border-radius: 14px;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .mode-card .mode-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #8B93AA;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .mode-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+    .mode-btn {
+      background: transparent;
+      color: #8B93AA;
+      border: 1px solid #232B41;
+      padding: 6px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .mode-btn:hover {
+      color: #E7ECF7;
+      background: rgba(47,217,196,0.08);
+    }
+    .mode-btn.active {
+      background: #2FD9C4;
+      color: #0A0E1A;
+      border-color: #2FD9C4;
+      box-shadow: 0 0 16px rgba(47,217,196,0.25);
+    }
     .card {
       background: #111726;
       border: 1px solid #232B41;
@@ -158,7 +200,6 @@
       color: #8B93AA;
       text-align: center;
     }
-
     @media (max-width: 768px) {
       .dashboard-layout {
         flex-direction: column;
@@ -176,6 +217,13 @@
       }
       .summary-cards {
         grid-template-columns: 1fr;
+      }
+      .mode-card {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .mode-btn-group {
+        justify-content: center;
       }
     }
   </style>
@@ -207,9 +255,17 @@
         <!-- Filled by JavaScript -->
       </div>
 
+      <div class="mode-card">
+        <span class="mode-label">📌 Data Mode</span>
+        <div class="mode-btn-group" id="modeGroup">
+          <button class="mode-btn active" data-mode="actual">Actual</button>
+          <button class="mode-btn" data-mode="projection">Projection</button>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">Monthly Cost (BDT)</div>
-        <div class="card-sub">2025 (Jan–Dec) vs 2026 (Jan–Jul)</div>
+        <div class="card-sub" id="chartSub">2025 (Jan–Dec) vs 2026 (Jan–Jul)</div>
         <div class="chart-container">
           <canvas id="revenueChart"></canvas>
         </div>
@@ -245,21 +301,40 @@
   const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
 
-  function padYearData(yearData) {
+  // Pad actual 2026 with nulls for Aug–Dec
+  function padYearData(yearData, fillNull = true) {
     const padded = { months: allMonths };
     for (const f of factories) {
       const existing = yearData[f] || [];
       const arr = [];
       for (let i = 0; i < 12; i++) {
-        arr.push(i < existing.length ? existing[i] : null);
+        if (i < existing.length) {
+          arr.push(existing[i]);
+        } else {
+          arr.push(fillNull ? null : 0);
+        }
       }
       padded[f] = arr;
     }
     return padded;
   }
 
-  const y2025 = padYearData(data2025);
-  const y2026 = padYearData(data2026);
+  function createProjectedData(basePadded) {
+    const projected = { months: allMonths };
+    for (const f of factories) {
+      const arr = [...basePadded[f]];
+      const julyVal = arr[6];
+      for (let i = 7; i < 12; i++) {
+        arr[i] = julyVal;
+      }
+      projected[f] = arr;
+    }
+    return projected;
+  }
+
+  const y2025Padded = padYearData(data2025, false); // 2025 full data
+  const y2026Actual = padYearData(data2026, true); // actual with nulls after Jul
+  const y2026Projected = createProjectedData(y2026Actual);
 
   function getTotals(yearData) {
     const totals = [];
@@ -273,8 +348,15 @@
     }
     return totals;
   }
-  const total2025 = getTotals(y2025);
-  const total2026 = getTotals(y2026);
+  const total2025 = getTotals(y2025Padded);
+  const total2026Actual = getTotals(y2026Actual);
+  const total2026Projected = getTotals(y2026Projected);
+
+  // =============================
+  // STATE
+  // =============================
+  let currentFilter = 'all';
+  let currentMode = 'actual';
 
   // =============================
   // CHART
@@ -282,7 +364,10 @@
   const ctx = document.getElementById('revenueChart').getContext('2d');
   let chart;
 
-  function getDatasets(filter) {
+  function getDatasets(filter, mode) {
+    const year2026Data = (mode === 'projection') ? y2026Projected : y2026Actual;
+    const total2026 = (mode === 'projection') ? total2026Projected : total2026Actual;
+
     if (filter === 'all') {
       return [
         {
@@ -297,7 +382,7 @@
           fill: false,
         },
         {
-          label: '2026 Total',
+          label: `2026 ${mode === 'projection' ? 'Projected' : 'Actual'}`,
           data: total2026,
           borderColor: '#F5B84D',
           backgroundColor: 'rgba(245,184,77,0.1)',
@@ -309,8 +394,8 @@
         }
       ];
     } else {
-      const data25 = y2025[filter];
-      const data26 = y2026[filter];
+      const data25 = y2025Padded[filter];
+      const data26 = year2026Data[filter];
       return [
         {
           label: `2025 ${filter}`,
@@ -324,7 +409,7 @@
           fill: false,
         },
         {
-          label: `2026 ${filter}`,
+          label: `2026 ${filter} (${mode === 'projection' ? 'Projected' : 'Actual'})`,
           data: data26,
           borderColor: '#F5B84D',
           backgroundColor: 'rgba(245,184,77,0.1)',
@@ -338,8 +423,8 @@
     }
   }
 
-  function renderChart(filter) {
-    const datasets = getDatasets(filter);
+  function renderChart(filter, mode) {
+    const datasets = getDatasets(filter, mode);
     if (chart) chart.destroy();
 
     Chart.register(ChartDataLabels);
@@ -373,7 +458,6 @@
             font: { size: 9, weight: 'bold' },
             formatter: function(value) {
               if (value === null || value === 0) return '';
-              // ✅ Changed to 2 decimal places
               return (value / 1000000).toFixed(2) + 'M';
             },
             offset: 2
@@ -384,7 +468,6 @@
           y: {
             ticks: {
               color: '#8B93AA',
-              // ✅ Changed to 2 decimal places
               callback: value => 'BDT ' + (value/1000000).toFixed(2) + 'M'
             },
             grid: { color: '#232B41' }
@@ -394,27 +477,61 @@
       plugins: [ChartDataLabels]
     });
 
+    document.getElementById('chartSub').textContent =
+      mode === 'projection'
+        ? '2025 (Jan–Dec) vs 2026 (Projected: Aug–Dec = Jul)'
+        : '2025 (Jan–Dec) vs 2026 (Jan–Jul only)';
+
     document.getElementById('chartNote').textContent =
-      filter === 'all' ? 'Showing total for all factories combined' : `Showing data for ${filter} only`;
+      filter === 'all'
+        ? (mode === 'projection' ? 'Showing total for all factories (projected)' : 'Showing total for all factories (actual)')
+        : `Showing data for ${filter} only (${mode === 'projection' ? 'projected' : 'actual'})`;
   }
 
   // =============================
-  // SUMMARY CARDS (with reversed change)
+  // SUMMARY CARDS (UPDATED)
   // =============================
-  function updateSummary(filter) {
+  function updateSummary(filter, mode) {
     const container = document.getElementById('summaryStats');
-    const janJulIndices = [0, 1, 2, 3, 4, 5, 6];
 
-    let sum2025, sum2026;
-
-    if (filter === 'all') {
-      sum2025 = janJulIndices.reduce((acc, i) => acc + (total2025[i] || 0), 0);
-      sum2026 = janJulIndices.reduce((acc, i) => acc + (total2026[i] || 0), 0);
-    } else {
-      sum2025 = janJulIndices.reduce((acc, i) => acc + (y2025[filter][i] || 0), 0);
-      sum2026 = janJulIndices.reduce((acc, i) => acc + (y2026[filter][i] || 0), 0);
+    // Helper to sum an array over a range of indices
+    function sumArray(arr, start, end) {
+      let s = 0;
+      for (let i = start; i <= end; i++) {
+        s += arr[i] || 0;
+      }
+      return s;
     }
 
+    let sum2025, sum2026;
+    let label2025, label2026;
+
+    if (mode === 'actual') {
+      // Actual mode: use Jan–Jul (indices 0–6) for both years
+      const indices = [0,1,2,3,4,5,6];
+      if (filter === 'all') {
+        sum2025 = indices.reduce((acc, i) => acc + (total2025[i] || 0), 0);
+        sum2026 = indices.reduce((acc, i) => acc + (total2026Actual[i] || 0), 0);
+      } else {
+        sum2025 = indices.reduce((acc, i) => acc + (y2025Padded[filter][i] || 0), 0);
+        sum2026 = indices.reduce((acc, i) => acc + (y2026Actual[filter][i] || 0), 0);
+      }
+      label2025 = '2025 Total (Jan–Jul)';
+      label2026 = '2026 Actual (Jan–Jul)';
+    } else {
+      // Projection mode: use full year (all 12 months) for both
+      if (filter === 'all') {
+        sum2025 = total2025.reduce((acc, v) => acc + (v || 0), 0);
+        sum2026 = total2026Projected.reduce((acc, v) => acc + (v || 0), 0);
+      } else {
+        sum2025 = y2025Padded[filter].reduce((acc, v) => acc + (v || 0), 0);
+        sum2026 = y2026Projected[filter].reduce((acc, v) => acc + (v || 0), 0);
+      }
+      label2025 = '2025 Total (Full Year)';
+      label2026 = '2026 Projected (Full Year)';
+    }
+
+    // Cost change (reversed sign)
     const stdChange = ((sum2026 - sum2025) / sum2025) * 100;
     const displayedChange = -stdChange;
 
@@ -433,38 +550,49 @@
 
     container.innerHTML = `
       <div class="stat-box">
-        <div class="label">2025 Total (Jan–Jul)</div>
-        <div class="value">BDT ${(sum2025/1000000).toFixed(1)}M</div>
+        <div class="label">${label2025}</div>
+        <div class="value">BDT ${(sum2025/1000000).toFixed(2)}M</div>
       </div>
       <div class="stat-box">
-        <div class="label">2026 Total (Jan–Jul)</div>
-        <div class="value amber">BDT ${(sum2026/1000000).toFixed(1)}M</div>
+        <div class="label">${label2026}</div>
+        <div class="value amber">BDT ${(sum2026/1000000).toFixed(2)}M</div>
       </div>
       <div class="stat-box">
-        <div class="label">Cost Change (Jan–Jul)</div>
+        <div class="label">Cost Change</div>
         <div class="value ${changeClass}">${changeText}</div>
       </div>
     `;
   }
 
   // =============================
-  // FILTER EVENTS
+  // MODE & FILTER TOGGLES
   // =============================
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentMode = this.dataset.mode;
+      renderChart(currentFilter, currentMode);
+      updateSummary(currentFilter, currentMode);
+    });
+  });
+
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      const filter = this.dataset.filter;
-      renderChart(filter);
-      updateSummary(filter);
+      currentFilter = this.dataset.filter;
+      renderChart(currentFilter, currentMode);
+      updateSummary(currentFilter, currentMode);
     });
   });
 
   // =============================
   // INITIAL RENDER
   // =============================
-  renderChart('all');
-  updateSummary('all');
+  renderChart('all', 'actual');
+  updateSummary('all', 'actual');
 </script>
 </body>
 </html>
