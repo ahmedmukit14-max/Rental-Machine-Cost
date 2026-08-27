@@ -760,10 +760,11 @@
                             anchor: 'end',
                             align: 'end',
                             color: '#E7ECF7',
-                            font: { size: 8, weight: 'bold' },
+                            font: { size: 10, weight: 'normal' },
                             formatter: function(value) {
                                 if (value === null || value === 0) return '';
-                                return (value / 1000000).toFixed(1) + 'M';
+                                // Show 2 decimal places
+                                return (value / 1000000).toFixed(2) + 'M';
                             },
                             offset: 1
                         }
@@ -773,7 +774,8 @@
                         y: {
                             ticks: {
                                 color: '#8B93AA',
-                                callback: value => 'BDT ' + (value / 1000000).toFixed(1) + 'M'
+                                // Show 2 decimal places
+                                callback: value => 'BDT ' + (value / 1000000).toFixed(2) + 'M'
                             },
                             grid: { color: '#232B41' }
                         }
