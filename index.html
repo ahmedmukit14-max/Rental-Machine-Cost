@@ -1,595 +1,1095 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rental Machine Cost Comparison 2025 vs 2026</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0A0E1A;
-      color: #E7ECF7;
-      font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-      padding: 24px;
-      min-height: 100vh;
-    }
-    .wrap {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #111726;
-      border: 1px solid #232B41;
-      border-radius: 14px;
-      padding: 18px 24px;
-      margin-bottom: 24px;
-    }
-    .header h1 {
-      font-weight: 700;
-      font-size: 22px;
-      color: #2FD9C4;
-    }
-    .header h1 span {
-      color: #E7ECF7;
-      font-weight: 400;
-    }
-    .dashboard-layout {
-      display: flex;
-      gap: 24px;
-      align-items: flex-start;
-    }
-    .filter-sidebar {
-      width: 220px;
-      flex-shrink: 0;
-      background: #111726;
-      border: 1px solid #232B41;
-      border-radius: 14px;
-      padding: 20px 16px;
-    }
-    .filter-sidebar h3 {
-      font-size: 14px;
-      font-weight: 600;
-      color: #8B93AA;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #232B41;
-      padding-bottom: 10px;
-    }
-    .filter-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .filter-btn {
-      background: transparent;
-      color: #8B93AA;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      text-align: left;
-      width: 100%;
-    }
-    .filter-btn:hover {
-      color: #E7ECF7;
-      background: rgba(47,217,196,0.08);
-    }
-    .filter-btn.active {
-      background: #2FD9C4;
-      color: #0A0E1A;
-      box-shadow: 0 0 16px rgba(47,217,196,0.25);
-    }
-    .main-content {
-      flex: 1;
-      min-width: 0;
-    }
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    .stat-box {
-      background: #111726;
-      border: 1px solid #232B41;
-      border-radius: 14px;
-      padding: 18px 16px;
-      text-align: center;
-    }
-    .stat-box .label {
-      font-size: 12px;
-      text-transform: uppercase;
-      color: #8B93AA;
-      letter-spacing: 0.3px;
-    }
-    .stat-box .value {
-      font-size: 26px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-    .stat-box .value.positive {
-      color: #4CAF50;
-    }
-    .stat-box .value.negative {
-      color: #F44336;
-    }
-    .stat-box .value.neutral {
-      color: #8C7CF6;
-    }
-    .stat-box .value.amber {
-      color: #F5B84D;
-    }
-    .mode-card {
-      background: #111726;
-      border: 1px solid #232B41;
-      border-radius: 14px;
-      padding: 14px 20px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .mode-card .mode-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #8B93AA;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .mode-btn-group {
-      display: flex;
-      gap: 8px;
-    }
-    .mode-btn {
-      background: transparent;
-      color: #8B93AA;
-      border: 1px solid #232B41;
-      padding: 6px 18px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-    .mode-btn:hover {
-      color: #E7ECF7;
-      background: rgba(47,217,196,0.08);
-    }
-    .mode-btn.active {
-      background: #2FD9C4;
-      color: #0A0E1A;
-      border-color: #2FD9C4;
-      box-shadow: 0 0 16px rgba(47,217,196,0.25);
-    }
-    .card {
-      background: #111726;
-      border: 1px solid #232B41;
-      border-radius: 14px;
-      padding: 20px 24px 24px;
-    }
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .card-sub {
-      font-size: 13px;
-      color: #8B93AA;
-      margin-bottom: 16px;
-    }
-    .chart-container {
-      position: relative;
-      height: 400px;
-    }
-    .legend-note {
-      margin-top: 12px;
-      font-size: 12px;
-      color: #8B93AA;
-      text-align: center;
-    }
-    @media (max-width: 768px) {
-      .dashboard-layout {
-        flex-direction: column;
-      }
-      .filter-sidebar {
-        width: 100%;
-      }
-      .filter-list {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-      .filter-btn {
-        width: auto;
-        flex: 1 0 auto;
-      }
-      .summary-cards {
-        grid-template-columns: 1fr;
-      }
-      .mode-card {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .mode-btn-group {
-        justify-content: center;
-      }
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rental Machine Cost Comparison 2023–2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0A0E1A;
+            color: #E7ECF7;
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            padding: 24px;
+            min-height: 100vh;
+        }
+        .wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111726;
+            border: 1px solid #232B41;
+            border-radius: 14px;
+            padding: 18px 24px;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-weight: 700;
+            font-size: 22px;
+            color: #2FD9C4;
+        }
+        .header h1 span {
+            color: #E7ECF7;
+            font-weight: 400;
+        }
+        .dashboard-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            background: #111726;
+            border: 1px solid #232B41;
+            border-radius: 14px;
+            padding: 18px 16px;
+            text-align: center;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #8B93AA;
+            letter-spacing: 0.3px;
+        }
+        .stat-box .value {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        .stat-box .value.positive {
+            color: #4CAF50;
+        }
+        .stat-box .value.negative {
+            color: #F44336;
+        }
+        .stat-box .value.neutral {
+            color: #8C7CF6;
+        }
+        .stat-box .value.amber {
+            color: #F5B84D;
+        }
+        .mode-card,
+        .view-card {
+            background: #111726;
+            border: 1px solid #232B41;
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .mode-card .mode-label,
+        .view-card .view-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8B93AA;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .mode-btn-group,
+        .view-btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .mode-btn,
+        .view-btn {
+            background: transparent;
+            color: #8B93AA;
+            border: 1px solid #232B41;
+            padding: 6px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .mode-btn:hover,
+        .view-btn:hover {
+            color: #E7ECF7;
+            background: rgba(47, 217, 196, 0.08);
+        }
+        .mode-btn.active,
+        .view-btn.active {
+            background: #2FD9C4;
+            color: #0A0E1A;
+            border-color: #2FD9C4;
+            box-shadow: 0 0 16px rgba(47, 217, 196, 0.25);
+        }
+        .card {
+            background: #111726;
+            border: 1px solid #232B41;
+            border-radius: 14px;
+            padding: 20px 24px 24px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .card-sub {
+            font-size: 13px;
+            color: #8B93AA;
+            margin-bottom: 16px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        .legend-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #8B93AA;
+            text-align: center;
+        }
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            background: #111726;
+            border: 1px solid #232B41;
+            border-radius: 14px;
+            padding: 14px 20px;
+        }
+        .filter-row label {
+            font-size: 13px;
+            color: #8B93AA;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-row select {
+            background: #0A0E1A;
+            color: #E7ECF7;
+            border: 1px solid #232B41;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        .filter-row select:focus {
+            outline: 1px solid #2FD9C4;
+        }
+        .hidden {
+            display: none !important;
+        }
+        @media (max-width: 768px) {
+            .dashboard-layout {
+                flex-direction: column;
+            }
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            .mode-card,
+            .view-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .mode-btn-group,
+            .view-btn-group {
+                justify-content: center;
+            }
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-row label {
+                justify-content: space-between;
+            }
+            .filter-row select {
+                min-width: 0;
+                flex: 1;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="header">
-    <h1>📊 Rental Machine Cost Comparison <span>2025 vs 2026</span></h1>
-  </div>
-
-  <div class="dashboard-layout">
-
-    <aside class="filter-sidebar">
-      <h3>🏭 Factories</h3>
-      <div class="filter-list" id="filterList">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="DGL">DGL</button>
-        <button class="filter-btn" data-filter="DRL">DRL</button>
-        <button class="filter-btn" data-filter="DFL">DFL</button>
-        <button class="filter-btn" data-filter="AFL">AFL</button>
-        <button class="filter-btn" data-filter="GGL">GGL</button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-
-      <div class="summary-cards" id="summaryStats">
-        <!-- Filled by JavaScript -->
-      </div>
-
-      <div class="mode-card">
-        <span class="mode-label">📌 Data Mode</span>
-        <div class="mode-btn-group" id="modeGroup">
-          <button class="mode-btn active" data-mode="actual">Actual</button>
-          <button class="mode-btn" data-mode="projection">Projection</button>
+    <div class="wrap">
+        <div class="header">
+            <h1>📊 Rental Machine Cost Comparison <span>2023–2026</span></h1>
         </div>
-      </div>
+        <div class="dashboard-layout">
+            <main class="main-content">
+                <!-- View toggle -->
+                <div class="view-card">
+                    <span class="view-label">📊 View</span>
+                    <div class="view-btn-group" id="viewGroup">
+                        <button class="view-btn active" data-view="summary">Summary</button>
+                        <button class="view-btn" data-view="breakdown">Machine wise Breakdown</button>
+                    </div>
+                </div>
 
-      <div class="card">
-        <div class="card-title">Monthly Cost (BDT)</div>
-        <div class="card-sub" id="chartSub">2025 (Jan–Dec) vs 2026 (Jan–Jul)</div>
-        <div class="chart-container">
-          <canvas id="revenueChart"></canvas>
+                <!-- ===== SUMMARY VIEW ===== -->
+                <div id="summaryView">
+                    <!-- Factory filter row -->
+                    <div class="filter-row">
+                        <label>Factory:
+                            <select id="summaryFactoryFilter"></select>
+                        </label>
+                    </div>
+
+                    <div class="summary-cards" id="summaryStats"></div>
+
+                    <div class="mode-card">
+                        <span class="mode-label">📌 Data Mode</span>
+                        <div class="mode-btn-group" id="modeGroup">
+                            <button class="mode-btn active" data-mode="actual">Actual monthly cost</button>
+                            <button class="mode-btn" data-mode="projection">Projected monthly cost</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Monthly Cost (BDT)</div>
+                        <div class="card-sub" id="chartSub">2023–2026 (Actual)</div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                        <div class="legend-note" id="chartNote">Showing total for all factories</div>
+                    </div>
+                </div>
+
+                <!-- ===== BREAKDOWN VIEW ===== -->
+                <div id="breakdownView" class="hidden">
+                    <div class="card">
+                        <div class="card-title">Machine wise Quantity &amp; Cost for the Year 2026</div>
+                        <div class="filter-row">
+                            <label>Month:
+                                <select id="monthFilter"></select>
+                            </label>
+                            <label>Factory:
+                                <select id="factoryFilter"></select>
+                            </label>
+                        </div>
+                        <div class="chart-container" style="height:500px;">
+                            <canvas id="breakdownChart"></canvas>
+                        </div>
+                        <div class="legend-note">Clustered columns: quantity (teal) and cost (amber) per machine.</div>
+                    </div>
+                </div>
+            </main>
         </div>
-        <div class="legend-note" id="chartNote">Showing total for all factories</div>
-      </div>
+    </div>
 
-    </main>
-  </div>
-</div>
+    <script>
+        // =========================================================================
+        // 1. DATA FOR ALL YEARS
+        // =========================================================================
+        // 2023
+        const data2023 = {
+            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            DGL: [504880, 509400, 484700, 482000, 780480, 670680, 571740, 503590, 353310, 507470, 712910, 941010],
+            DRL: [169900, 145650, 118800, 118760, 128440, 115220, 107100, 127980, 110900, 188900, 115500, 130180],
+            DFL: [12000, 0, 0, 0, 26600, 10600, 6300, 28800, 11400, 25200, 46200, 70300],
+            AFL: [473600, 257050, 84050, 85000, 221160, 216310, 117120, 108000, 120320, 623410, 176100, 363400],
+            GGL: [35760, 24200, 0, 0, 0, 23820, 114480, 41400, 17100, 57750, 92400, 172660]
+        };
 
-<script>
-  // =============================
-  // DATA
-  // =============================
-  const data2025 = {
-    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    DGL: [1445400, 1249860, 1080690, 1036340, 1278170, 990870, 1545270, 1735350, 2035222, 2562790, 2319440, 2711150],
-    DRL: [313800, 206440, 74040, 74360, 171700, 84400, 105100, 33200, 104400, 166000, 198200, 173260],
-    DFL: [56950, 87500, 37300, 22680, 92140, 69400, 101000, 10000, 30000, 65000, 60000, 70000],
-    AFL: [257700, 39160, 48420, 62500, 115000, 145310, 134780, 80000, 184000, 189000, 154000, 142000],
-    GGL: [148380, 147100, 56840, 48710, 177010, 168210, 120480, 109040, 271710, 196960, 298010, 334460]
-  };
+        // 2024
+        const data2024 = {
+            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            DGL: [898310, 706080, 1053850, 834680, 1016130, 775810, 1027070, 995270, 944650, 1047080, 1143110, 1538610],
+            DRL: [138200, 111660, 143400, 125850, 196810, 141590, 142550, 91150, 130000, 51300, 60640, 96060],
+            DFL: [60300, 61100, 105820, 35540, 25750, 32450, 13700, 15900, 84250, 53750, 25400, 67000],
+            AFL: [377350, 223050, 244220, 190780, 184570, 185300, 203000, 100000, 75020, 86470, 71170, 321260],
+            GGL: [211520, 59080, 81110, 60200, 72660, 126210, 153430, 85370, 205750, 221840, 432800, 334740]
+        };
 
-  const data2026 = {
-    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    DGL: [2280500, 1485870, 1167550, 1864320, 1844040, 1199440, 888160],
-    DRL: [133690, 83760, 21500, 43400, 113750, 166560, 94360],
-    DFL: [68500, 28400, 22220, 25500, 48100, 39600, 69990],
-    AFL: [264790, 136340, 155440, 211050, 236130, 293620, 262150],
-    GGL: [292150, 95730, 256670, 179170, 154500, 143760, 166120]
-  };
+        // 2025
+        const data2025 = {
+            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            DGL: [1445400, 1249860, 1080690, 1036340, 1278170, 990870, 1545270, 1735350, 2035222, 2562790, 2319440,
+                2711150
+            ],
+            DRL: [313800, 206440, 74040, 74360, 171700, 84400, 105100, 33200, 104400, 166000, 198200, 173260],
+            DFL: [56950, 87500, 37300, 22680, 92140, 69400, 101000, 10000, 30000, 65000, 60000, 70000],
+            AFL: [257700, 39160, 48420, 62500, 115000, 145310, 134780, 80000, 184000, 189000, 154000, 142000],
+            GGL: [148380, 147100, 56840, 48710, 177010, 168210, 120480, 109040, 271710, 196960, 298010, 334460]
+        };
 
-  const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
+        // 2026 (only Jan–Jun)
+        const data2026 = {
+            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            DGL: [2280500, 1485870, 1167550, 1864320, 1844040, 1199440],
+            DRL: [133690, 83760, 21500, 43400, 113750, 166560],
+            DFL: [68500, 28400, 22220, 25500, 48100, 39600],
+            AFL: [264790, 136340, 155440, 211050, 236130, 293620],
+            GGL: [292150, 95730, 256670, 179170, 154500, 143760]
+        };
 
-  function padYearData(yearData, fillNull = true) {
-    const padded = { months: allMonths };
-    for (const f of factories) {
-      const existing = yearData[f] || [];
-      const arr = [];
-      for (let i = 0; i < 12; i++) {
-        if (i < existing.length) {
-          arr.push(existing[i]);
-        } else {
-          arr.push(fillNull ? null : 0);
-        }
-      }
-      padded[f] = arr;
-    }
-    return padded;
-  }
+        const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const factories = ['DGL', 'DRL', 'DFL', 'AFL', 'GGL'];
 
-  function createProjectedData(basePadded) {
-    const projected = { months: allMonths };
-    for (const f of factories) {
-      const arr = [...basePadded[f]];
-      const julyVal = arr[6];
-      for (let i = 7; i < 12; i++) {
-        arr[i] = julyVal;
-      }
-      projected[f] = arr;
-    }
-    return projected;
-  }
-
-  const y2025Padded = padYearData(data2025, false);
-  const y2026Actual = padYearData(data2026, true);
-  const y2026Projected = createProjectedData(y2026Actual);
-
-  function getTotals(yearData) {
-    const totals = [];
-    for (let i = 0; i < 12; i++) {
-      let sum = 0, hasData = false;
-      for (const f of factories) {
-        const val = yearData[f][i];
-        if (val !== null && val !== undefined) { sum += val; hasData = true; }
-      }
-      totals.push(hasData ? sum : null);
-    }
-    return totals;
-  }
-  const total2025 = getTotals(y2025Padded);
-  const total2026Actual = getTotals(y2026Actual);
-  const total2026Projected = getTotals(y2026Projected);
-
-  // =============================
-  // STATE
-  // =============================
-  let currentFilter = 'all';
-  let currentMode = 'actual';
-
-  // =============================
-  // CHART
-  // =============================
-  const ctx = document.getElementById('revenueChart').getContext('2d');
-  let chart;
-
-  function getDatasets(filter, mode) {
-    const year2026Data = (mode === 'projection') ? y2026Projected : y2026Actual;
-    const total2026 = (mode === 'projection') ? total2026Projected : total2026Actual;
-
-    // For 2026 dataset, we may add segment styling
-    const baseDataset2026 = {
-      label: `2026 ${mode === 'projection' ? 'Projected' : 'Actual'}`,
-      data: total2026,
-      borderColor: '#F5B84D',
-      backgroundColor: 'rgba(245,184,77,0.1)',
-      tension: 0.2,
-      pointRadius: 4,
-      pointBackgroundColor: '#F5B84D',
-      spanGaps: false,
-      fill: false,
-    };
-
-    // If projection mode, add segment to dash only from August (index 7)
-    if (mode === 'projection') {
-      baseDataset2026.segment = {
-        borderDash: (ctx) => {
-          // ctx.p0DataIndex is the start index of the segment
-          const start = ctx.p0DataIndex;
-          // Dash for segments starting at index 7 or later (August onwards)
-          return start >= 7 ? [6, 4] : [];
-        }
-      };
-    } else {
-      // For actual, no dash
-      baseDataset2026.segment = undefined;
-    }
-
-    if (filter === 'all') {
-      return [
-        {
-          label: '2025 Total',
-          data: total2025,
-          borderColor: '#2FD9C4',
-          backgroundColor: 'rgba(47,217,196,0.1)',
-          tension: 0.2,
-          pointRadius: 4,
-          pointBackgroundColor: '#2FD9C4',
-          spanGaps: false,
-          fill: false,
-        },
-        baseDataset2026
-      ];
-    } else {
-      const data25 = y2025Padded[filter];
-      const data26 = year2026Data[filter];
-      return [
-        {
-          label: `2025 ${filter}`,
-          data: data25,
-          borderColor: '#2FD9C4',
-          backgroundColor: 'rgba(47,217,196,0.1)',
-          tension: 0.2,
-          pointRadius: 4,
-          pointBackgroundColor: '#2FD9C4',
-          spanGaps: false,
-          fill: false,
-        },
-        {
-          ...baseDataset2026,
-          label: `2026 ${filter} (${mode === 'projection' ? 'Projected' : 'Actual'})`,
-          data: data26,
-        }
-      ];
-    }
-  }
-
-  function renderChart(filter, mode) {
-    const datasets = getDatasets(filter, mode);
-    if (chart) chart.destroy();
-
-    Chart.register(ChartDataLabels);
-
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: { labels: allMonths, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color: '#E7ECF7', font: { size: 12 } } },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                if (context.parsed.y === null) return null;
-                let label = context.dataset.label || '';
-                if (label) label += ': ';
-                label += new Intl.NumberFormat('en-IN', {
-                  style: 'currency', currency: 'BDT',
-                  minimumFractionDigits: 0, maximumFractionDigits: 0
-                }).format(context.parsed.y);
-                return label;
-              }
+        // Pad all years to 12 months (2026 gets nulls after Jun)
+        function padYearData(yearData, fillNull = true) {
+            const padded = { months: allMonths };
+            for (const f of factories) {
+                const existing = yearData[f] || [];
+                const arr = [];
+                for (let i = 0; i < 12; i++) {
+                    arr.push(i < existing.length ? existing[i] : (fillNull ? null : 0));
+                }
+                padded[f] = arr;
             }
-          },
-          datalabels: {
-            anchor: 'end',
-            align: 'end',
-            color: '#E7ECF7',
-            font: { size: 9, weight: 'bold' },
-            formatter: function(value) {
-              if (value === null || value === 0) return '';
-              return (value / 1000000).toFixed(2) + 'M';
-            },
-            offset: 2
-          }
-        },
-        scales: {
-          x: { ticks: { color: '#8B93AA' }, grid: { color: '#232B41' } },
-          y: {
-            ticks: {
-              color: '#8B93AA',
-              callback: value => 'BDT ' + (value/1000000).toFixed(2) + 'M'
-            },
-            grid: { color: '#232B41' }
-          }
+            return padded;
         }
-      },
-      plugins: [ChartDataLabels]
-    });
 
-    document.getElementById('chartSub').textContent =
-      mode === 'projection'
-        ? '2025 (Jan–Dec) vs 2026 (Projected: Aug–Dec = Jul)'
-        : '2025 (Jan–Dec) vs 2026 (Jan–Jul only)';
+        // Projection: copy June (index 5) to Jul–Dec
+        function createProjectedData(basePadded) {
+            const projected = { months: allMonths };
+            for (const f of factories) {
+                const arr = [...basePadded[f]];
+                const juneVal = arr[5];
+                for (let i = 6; i < 12; i++) arr[i] = juneVal;
+                projected[f] = arr;
+            }
+            return projected;
+        }
 
-    document.getElementById('chartNote').textContent =
-      filter === 'all'
-        ? (mode === 'projection' ? 'Showing total for all factories (projected)' : 'Showing total for all factories (actual)')
-        : `Showing data for ${filter} only (${mode === 'projection' ? 'projected' : 'actual'})`;
-  }
+        const y2023Padded = padYearData(data2023, false);
+        const y2024Padded = padYearData(data2024, false);
+        const y2025Padded = padYearData(data2025, false);
+        const y2026Actual = padYearData(data2026, true);
+        const y2026Projected = createProjectedData(y2026Actual);
 
-  // =============================
-  // SUMMARY CARDS
-  // =============================
-  function updateSummary(filter, mode) {
-    const container = document.getElementById('summaryStats');
+        // Helper: total per month across factories
+        function getTotals(yearData) {
+            const totals = [];
+            for (let i = 0; i < 12; i++) {
+                let sum = 0,
+                    hasData = false;
+                for (const f of factories) {
+                    const val = yearData[f][i];
+                    if (val !== null && val !== undefined) { sum += val;
+                        hasData = true; }
+                }
+                totals.push(hasData ? sum : null);
+            }
+            return totals;
+        }
 
-    let sum2025, sum2026;
-    let label2025, label2026;
+        const total2023 = getTotals(y2023Padded);
+        const total2024 = getTotals(y2024Padded);
+        const total2025 = getTotals(y2025Padded);
+        const total2026Actual = getTotals(y2026Actual);
+        const total2026Projected = getTotals(y2026Projected);
 
-    if (mode === 'actual') {
-      const indices = [0,1,2,3,4,5,6];
-      if (filter === 'all') {
-        sum2025 = indices.reduce((acc, i) => acc + (total2025[i] || 0), 0);
-        sum2026 = indices.reduce((acc, i) => acc + (total2026Actual[i] || 0), 0);
-      } else {
-        sum2025 = indices.reduce((acc, i) => acc + (y2025Padded[filter][i] || 0), 0);
-        sum2026 = indices.reduce((acc, i) => acc + (y2026Actual[filter][i] || 0), 0);
-      }
-      label2025 = '2025 Total (Jan–Jul)';
-      label2026 = '2026 Actual (Jan–Jul)';
-    } else {
-      if (filter === 'all') {
-        sum2025 = total2025.reduce((acc, v) => acc + (v || 0), 0);
-        sum2026 = total2026Projected.reduce((acc, v) => acc + (v || 0), 0);
-      } else {
-        sum2025 = y2025Padded[filter].reduce((acc, v) => acc + (v || 0), 0);
-        sum2026 = y2026Projected[filter].reduce((acc, v) => acc + (v || 0), 0);
-      }
-      label2025 = '2025 Total (Full Year)';
-      label2026 = '2026 Projected (Full Year)';
-    }
+        // =========================================================================
+        // 2. MACHINE BREAKDOWN DATA (unchanged, 2026 only)
+        // =========================================================================
+        // [The machineNames, quantityData, costData, columnKeys etc. remain exactly as in your code.
+        //  To save space, I'm using the same arrays from your previous version.
+        //  They are identical to the ones you provided, so I will include them verbatim.]
+        // --- BEGIN machine breakdown data ---
+        const machineNames = [
+            "Single Needle Lock Stitch (Auto)",
+            "Single Needle Lock Stitch (Needle Feed)",
+            "Double Needle Lock Stitch (Auto)",
+            "Overlock 4th, 5th & 6th",
+            "Feed Of The Arm (Light & Heavy)",
+            "Chain Stitch (SN & DN)",
+            "Button Hole",
+            "Button Stitch",
+            "Bartack-Light",
+            "Multi Needle Chain Stich",
+            "Flat-Lock/Flat Bed",
+            "A.P.W Boon Pocket Machine",
+            "Eyelet",
+            "Vertical Machine",
+            "Snap button",
+            "Iron Table",
+            "Heat Seal (Auto)",
+            "Blind Stitch",
+            "Shuttle Stitch",
+            "Pattern Sewing",
+            "Rib Cutter",
+            "Cover Stitch",
+            "Button Wraping",
+            "Zig Zag",
+            "Plastic Staple"
+        ];
 
-    const stdChange = ((sum2026 - sum2025) / sum2025) * 100;
-    const displayedChange = -stdChange;
+        const quantityData = [
+            [201, 167, 115, 157, 156, 97, 12, null, null, 30, 30, 30, 4, 6, 5, 37, 30, 30, 45, 67, 55, 20, 72, 27, 44, 37,
+                45, 40
+            ],
+            [null, null, 5, 10, 10, 10, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null
+            ],
+            [14, 11, 3, 3, 3, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 7, 4,
+                null, 19, null, null, null, null, null
+            ],
+            [43, 49, 64, 48, 57, 38, 72, 54, 27, 40, 46, 31, 5, 14, 14, 14, 0, 13, 13, 17, 17, 24, 24, 19, 9, 8, 36, 20,
+                35, 32, 5, 18
+            ],
+            [60, 45, 32, 57, 47, 36, 2, null, null, null, null, null, 1, null, null, null, null, null, null, 2, 15, 10,
+                null, null, 4, 2, 2, null
+            ],
+            [81, 56, 66, 106, 95, 62, 18, 5, null, null, 4, 4, 21, 18, 13, 11, 12, 12, 9, 8, 8, 5, 2, 3, 3, 12, 15, 22, 9,
+                4, 2
+            ],
+            [18, 16, 10, 22, 18, 12, null, null, 2, null, null, null, null, null, null, null, null, null, null, 1, 2, 2,
+                2, 5, 5, null, null, null
+            ],
+            [null, null, null, 16, 10, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [25, 15, 11, 19, 20, 12, null, null, null, null, null, null, null, null, null, null, null, null, null, 11, 11,
+                11, 5, 14, 16, 13, 9, null, 9, 8, 9, 4
+            ],
+            [34, 27, 28, 20, 16, 10, 4, null, null, null, null, null, null, null, null, null, null, null, null, 6, 7, 13,
+                7, 1, 3, 5, 1, null, 8, 9, 3
+            ],
+            [2, 7, 9, 18, 19, 12, 3, null, null, null, null, null, null, null, null, null, null, null, null, null, 2, 1,
+                6, 6, null, null, 4
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null
+            ],
+            [3, 16, 2, null, null, null, null, null, 1, 1, 3, null, null, null, null, null, null, null, null, null, 1,
+                null, 4, 2, 1, 1, null
+            ],
+            [8, 11, 16, 51, 55, 40, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, 5, 2
+            ],
+            [2, 3, 3, 12, 12, 8, null, null, 6, 11, 9, 9, null, null, null, null, null, null, null, 7, 12, 6, 6, 3, 11,
+                4, 5, 9
+            ],
+            [31, 31, 34, 34, 35, 36, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null
+            ],
+            [2, 4, 2, 2, 5, 2, null, null, null, null, null, null, null, 2, null, null, null, null, null, 1, null, 1, 4,
+                null, null, null, null
+            ],
+            [12, 12, 12, 11, 12, 6, null, null, null, 1, null, null, null, 8, 6, 5, 7, 19, 16, 14, null, 1, null, null,
+                null, null
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, 3, 2, 2, 2, 1, 1
+            ],
+            [10, 10, 8, 3, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, null, null, 1, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, 1, 1, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null
+            ],
+            [3, 3, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3,
+                1, null, null, 1, 2, 1, null
+            ]
+        ];
 
-    let changeText = '';
-    let changeClass = 'neutral';
-    if (displayedChange > 0) {
-      changeText = '+' + displayedChange.toFixed(1) + '%';
-      changeClass = 'positive';
-    } else if (displayedChange < 0) {
-      changeText = displayedChange.toFixed(1) + '%';
-      changeClass = 'negative';
-    } else {
-      changeText = '0.0%';
-      changeClass = 'neutral';
-    }
+        const costData = [
+            [527500, 305800, 193919, 196400, 256100, 132000, 24000, null, null, 54000, 66000, 39000, 8000, 9400, 11000,
+                61380, 24300, 51300, 62100, 68670, 74610, 34200, 149130, 28890, 58050, 67770, 59310, 84730
+            ],
+            [null, null, 28500, 12000, 20800, 22000, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null
+            ],
+            [57000, 35400, 17100, 22500, 19800, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, 6750, 10000, null, 42000, null, null, null, null, null
+            ],
+            [157500, 95100, 114800, 148800, 125400, 83600, 64500, 77400, 21500, 41000, 27700, 40000, 7600, 21200, 12000,
+                8100, 0, 14900, 2300, 39780, 13770, 35280, 45900, 19440, 15660, 13320, 57780, 21240, 38520, 31320, 7390,
+                11790
+            ],
+            [363000, 206250, 142019, 304750, 258500, 148000, 2000, null, null, null, null, null, 1320, null, null, null,
+                null, null, null, 7200, 25750, 23000, null, 3500, 1750, 9250, null
+            ],
+            [197700, 91000, 116900, 320300, 209000, 136400, 20640, 6360, null, null, 3360, 960, 39300, 16400, 12800, 25500,
+                23800, 26300, 19200, 15200, 10100, 3500, 2400, 2300, 3400, 4800, 23300, 18800, 7800, 5700, 2500
+            ],
+            [113120, 79520, 53200, 114240, 110880, 73920, null, null, 4800, null, null, null, null, null, null, null, null,
+                null, null, 900, 600, 2100, 3000, 13500, 18600, null, null, null
+            ],
+            [null, null, null, 98560, 58700, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null
+            ],
+            [175000, 79800, 58520, 121240, 106400, 73920, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, 80080, 47320, 29960, 35000, 59920, 76720, 78680, 29120, null, 26040, 16800, 19600, 9520
+            ],
+            [206500, 117950, 109000, 191000, 88000, 54000, 18500, null, null, null, null, null, null, null, null, null,
+                null, null, null, 24250, 19750, 14000, 23250, 3000, 8250, 16250, 1500, null, 16750, 19500, 3600
+            ],
+            [6180, 14210, 24322, 62740, 68340, 42880, 4050, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, 680, 900, 7000, 11500, null, null, 6600
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null
+            ],
+            [79600, 202800, 53200, null, null, null, null, null, 7200, 26400, 25200, null, null, null, null, null, null,
+                null, null, null, 9000, null, 50700, 24700, 10100, 6500
+            ],
+            [20000, 19700, 22330, 85000, 119800, 86800, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, 7210, 1980
+            ],
+            [6000, 6840, 6840, 10800, 31660, 21120, null, null, 2400, 19600, 19800, 21600, null, null, null, null, null,
+                null, null, 5600, 11400, 8600, 13600, 5700, 13900, 6100, 9600, 11800
+            ],
+            [192400, 108700, 114400, 186700, 231000, 218000, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null
+            ],
+            [15000, 11400, 11400, 25000, 33000, 13800, null, null, null, null, null, null, null, 2700, null, null, null,
+                null, null, 1500, null, 1200, 9000, null, null, null, null
+            ],
+            [52300, 45400, 44400, 55400, 52800, 26400, null, null, null, 450, null, null, null, 22600, 12800, 10000,
+                32200, 47400, 44400, 44800, null, 600, null, null, null, null
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, 6720, 3600, 4560, 4080, 2640, 2640
+            ],
+            [89500, 56100, 53200, 7450, 6300, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, null, null, null, 11000, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [null, null, null, 7700, 7900, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
+            ],
+            [22200, 9900, 3500, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, 4500, 1500, null, 2100, 4200, 2100, null
+            ]
+        ];
 
-    container.innerHTML = `
-      <div class="stat-box">
-        <div class="label">${label2025}</div>
-        <div class="value">BDT ${(sum2025/1000000).toFixed(2)}M</div>
-      </div>
-      <div class="stat-box">
-        <div class="label">${label2026}</div>
-        <div class="value amber">BDT ${(sum2026/1000000).toFixed(2)}M</div>
-      </div>
-      <div class="stat-box">
-        <div class="label">Change %</div>
-        <div class="value ${changeClass}">${changeText}</div>
-      </div>
-    `;
-  }
+        const allColumnKeys = [
+            'DGL_Jan', 'DGL_Feb', 'DGL_Mar', 'DGL_Apr', 'DGL_May', 'DGL_Jun',
+            'DRL_Jan', 'DRL_Feb', 'DRL_Mar', 'DRL_Apr', 'DRL_May', 'DRL_Jun', 'DRL_Jul',
+            'DFL_Jan', 'DFL_Feb', 'DFL_Mar', 'DFL_Apr', 'DFL_May', 'DFL_Jun',
+            'AFL_Jan', 'AFL_Feb', 'AFL_Mar', 'AFL_Apr', 'AFL_May', 'AFL_Jun', 'AFL_Jul',
+            'GGL_Jan', 'GGL_Feb', 'GGL_Mar', 'GGL_Apr', 'GGL_May', 'GGL_Jun'
+        ];
+        const columnKeys = allColumnKeys.filter(key => !key.endsWith('_Jul'));
 
-  // =============================
-  // TOGGLES
-  // =============================
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      currentMode = this.dataset.mode;
-      renderChart(currentFilter, currentMode);
-      updateSummary(currentFilter, currentMode);
-    });
-  });
+        const machineData = {};
+        factories.forEach(f => { machineData[f] = {}; });
 
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      currentFilter = this.dataset.filter;
-      renderChart(currentFilter, currentMode);
-      updateSummary(currentFilter, currentMode);
-    });
-  });
+        for (let mIdx = 0; mIdx < machineNames.length; mIdx++) {
+            const name = machineNames[mIdx];
+            const qRow = quantityData[mIdx];
+            const cRow = costData[mIdx];
+            for (let colIdx = 0; colIdx < columnKeys.length; colIdx++) {
+                const key = columnKeys[colIdx];
+                const [fac, mon] = key.split('_');
+                const q = (qRow[colIdx] !== undefined && qRow[colIdx] !== null) ? qRow[colIdx] : 0;
+                const c = (cRow[colIdx] !== undefined && cRow[colIdx] !== null) ? cRow[colIdx] : 0;
+                if (!machineData[fac][mon]) machineData[fac][mon] = {};
+                machineData[fac][mon][name] = { quantity: q, cost: c };
+            }
+        }
 
-  // =============================
-  // INIT
-  // =============================
-  renderChart('all', 'actual');
-  updateSummary('all', 'actual');
-</script>
+        const monthSet = new Set();
+        factories.forEach(f => Object.keys(machineData[f]).forEach(m => monthSet.add(m)));
+        const monthList = Array.from(monthSet).sort((a, b) => {
+            const order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return order.indexOf(a) - order.indexOf(b);
+        });
+        // --- END machine breakdown data ---
+
+        // =========================================================================
+        // 3. STATE
+        // =========================================================================
+        let currentFilter = 'all';
+        let currentMode = 'actual';
+        let currentView = 'summary';
+
+        // =========================================================================
+        // 4. SUMMARY CHART – now supports 4 years in Actual mode
+        // =========================================================================
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        let summaryChart;
+
+        function getDatasets(filter, mode) {
+            // Helper: get data for a given year and filter
+            function getYearData(yearData) {
+                if (filter === 'all') {
+                    return getTotals(yearData);
+                } else {
+                    return yearData[filter] || [];
+                }
+            }
+
+            if (mode === 'projection') {
+                // Only 2025 and 2026 projected
+                const data25 = getYearData(y2025Padded);
+                const data26 = getYearData(y2026Projected);
+                return [{
+                    label: '2025',
+                    data: data25,
+                    borderColor: '#2FD9C4',
+                    backgroundColor: 'rgba(47,217,196,0.1)',
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2FD9C4',
+                    spanGaps: false,
+                    fill: false,
+                }, {
+                    label: '2026 (Projected)',
+                    data: data26,
+                    borderColor: '#F5B84D',
+                    backgroundColor: 'rgba(245,184,77,0.1)',
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#F5B84D',
+                    spanGaps: false,
+                    fill: false,
+                    segment: {
+                        borderDash: (ctx) => ctx.p0DataIndex >= 6 ? [6, 4] : []
+                    },
+                }];
+            } else {
+                // Actual mode: 2023, 2024, 2025, 2026
+                const d23 = getYearData(y2023Padded);
+                const d24 = getYearData(y2024Padded);
+                const d25 = getYearData(y2025Padded);
+                const d26 = getYearData(y2026Actual);
+                return [{
+                    label: '2023',
+                    data: d23,
+                    borderColor: '#8B93AA',
+                    backgroundColor: 'rgba(139,147,170,0.1)',
+                    tension: 0.2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#8B93AA',
+                    spanGaps: false,
+                    fill: false,
+                }, {
+                    label: '2024',
+                    data: d24,
+                    borderColor: '#6C5CE7',
+                    backgroundColor: 'rgba(108,92,231,0.1)',
+                    tension: 0.2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#6C5CE7',
+                    spanGaps: false,
+                    fill: false,
+                }, {
+                    label: '2025',
+                    data: d25,
+                    borderColor: '#2FD9C4',
+                    backgroundColor: 'rgba(47,217,196,0.1)',
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2FD9C4',
+                    spanGaps: false,
+                    fill: false,
+                }, {
+                    label: '2026',
+                    data: d26,
+                    borderColor: '#F5B84D',
+                    backgroundColor: 'rgba(245,184,77,0.1)',
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#F5B84D',
+                    spanGaps: false,
+                    fill: false,
+                }];
+            }
+        }
+
+        function renderSummaryChart(filter, mode) {
+            const datasets = getDatasets(filter, mode);
+            if (summaryChart) summaryChart.destroy();
+            Chart.register(ChartDataLabels);
+            summaryChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: allMonths, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#E7ECF7', font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.parsed.y === null) return null;
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    label += new Intl.NumberFormat('en-IN', {
+                                        style: 'currency',
+                                        currency: 'BDT',
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0
+                                    }).format(context.parsed.y);
+                                    return label;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            color: '#E7ECF7',
+                            font: { size: 8, weight: 'bold' },
+                            formatter: function(value) {
+                                if (value === null || value === 0) return '';
+                                return (value / 1000000).toFixed(1) + 'M';
+                            },
+                            offset: 1
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#8B93AA' }, grid: { color: '#232B41' } },
+                        y: {
+                            ticks: {
+                                color: '#8B93AA',
+                                callback: value => 'BDT ' + (value / 1000000).toFixed(1) + 'M'
+                            },
+                            grid: { color: '#232B41' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+
+            // Update subtitle and note
+            const sub = document.getElementById('chartSub');
+            const note = document.getElementById('chartNote');
+            if (mode === 'projection') {
+                sub.textContent = '2025 vs 2026 (Projected: Jul–Dec = Jun)';
+                note.textContent = filter === 'all' ?
+                    'Showing total for all factories (projected)' :
+                    `Showing data for ${filter} only (projected)`;
+            } else {
+                sub.textContent = '2023–2026 (Actual)';
+                note.textContent = filter === 'all' ?
+                    'Showing total for all factories (actual)' :
+                    `Showing data for ${filter} only (actual)`;
+            }
+        }
+
+        // =========================================================================
+        // 5. SUMMARY CARDS (unchanged: compare 2025 vs 2026)
+        // =========================================================================
+        function updateSummary(filter, mode) {
+            const container = document.getElementById('summaryStats');
+            let sum2025, sum2026, label2025, label2026;
+            if (mode === 'actual') {
+                const indices = [0, 1, 2, 3, 4, 5]; // Jan–Jun
+                if (filter === 'all') {
+                    sum2025 = indices.reduce((a, i) => a + (total2025[i] || 0), 0);
+                    sum2026 = indices.reduce((a, i) => a + (total2026Actual[i] || 0), 0);
+                } else {
+                    sum2025 = indices.reduce((a, i) => a + (y2025Padded[filter][i] || 0), 0);
+                    sum2026 = indices.reduce((a, i) => a + (y2026Actual[filter][i] || 0), 0);
+                }
+                label2025 = '2025 Total (Jan–Jun)';
+                label2026 = '2026 Actual (Jan–Jun)';
+            } else {
+                // projection: full year
+                if (filter === 'all') {
+                    sum2025 = total2025.reduce((a, v) => a + (v || 0), 0);
+                    sum2026 = total2026Projected.reduce((a, v) => a + (v || 0), 0);
+                } else {
+                    sum2025 = y2025Padded[filter].reduce((a, v) => a + (v || 0), 0);
+                    sum2026 = y2026Projected[filter].reduce((a, v) => a + (v || 0), 0);
+                }
+                label2025 = '2025 Total (Full Year)';
+                label2026 = '2026 Projected (Full Year)';
+            }
+            const stdChange = ((sum2026 - sum2025) / sum2025) * 100;
+            const displayedChange = -stdChange;
+            let changeText, changeClass = 'neutral';
+            if (displayedChange > 0) {
+                changeText = '+' + displayedChange.toFixed(1) + '%';
+                changeClass = 'positive';
+            } else if (displayedChange < 0) {
+                changeText = displayedChange.toFixed(1) + '%';
+                changeClass = 'negative';
+            } else {
+                changeText = '0.0%';
+                changeClass = 'neutral';
+            }
+            container.innerHTML = `
+            <div class="stat-box"><div class="label">${label2025}</div><div class="value">BDT ${(sum2025/1000000).toFixed(2)}M</div></div>
+            <div class="stat-box"><div class="label">${label2026}</div><div class="value amber">BDT ${(sum2026/1000000).toFixed(2)}M</div></div>
+            <div class="stat-box"><div class="label">Change %</div><div class="value ${changeClass}">${changeText}</div></div>
+          `;
+        }
+
+        // =========================================================================
+        // 6. BREAKDOWN CHART (unchanged)
+        // =========================================================================
+        let breakdownChart = null;
+        const breakdownCtx = document.getElementById('breakdownChart').getContext('2d');
+
+        function getAggregatedData(monthFilter, factoryFilter) {
+            const facList = (factoryFilter === 'all') ? factories : [factoryFilter];
+            const monList = (monthFilter === 'all') ? monthList : [monthFilter];
+            const result = {};
+            machineNames.forEach(name => { result[name] = { quantity: 0, cost: 0 }; });
+            facList.forEach(fac => {
+                monList.forEach(mon => {
+                    const data = machineData[fac] && machineData[fac][mon] ? machineData[fac][mon] : {};
+                    machineNames.forEach(name => {
+                        if (data[name]) {
+                            result[name].quantity += data[name].quantity || 0;
+                            result[name].cost += data[name].cost || 0;
+                        }
+                    });
+                });
+            });
+            const filtered = {};
+            Object.keys(result).forEach(name => {
+                if (result[name].quantity !== 0 || result[name].cost !== 0) {
+                    filtered[name] = result[name];
+                }
+            });
+            return filtered;
+        }
+
+        function renderBreakdown(month, factory) {
+            const data = getAggregatedData(month, factory);
+            const machineNamesAll = Object.keys(data);
+            const quantities = machineNamesAll.map(name => data[name].quantity);
+            const costs = machineNamesAll.map(name => data[name].cost);
+
+            if (breakdownChart) breakdownChart.destroy();
+            Chart.register(ChartDataLabels);
+
+            breakdownChart = new Chart(breakdownCtx, {
+                type: 'bar',
+                data: {
+                    labels: machineNamesAll,
+                    datasets: [{
+                        label: 'Quantity',
+                        data: quantities,
+                        backgroundColor: 'rgba(47,217,196,0.7)',
+                        borderColor: '#2FD9C4',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                    }, {
+                        label: 'Cost (BDT)',
+                        data: costs,
+                        backgroundColor: 'rgba(245,184,77,0.7)',
+                        borderColor: '#F5B84D',
+                        borderWidth: 1,
+                        yAxisID: 'y1',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#E7ECF7', font: { size: 12 } } },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            color: '#E7ECF7',
+                            font: { size: 8, weight: 'normal' },
+                            formatter: function(value, context) {
+                                if (value === 0) return '';
+                                if (context.datasetIndex === 1) {
+                                    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                    else if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+                                    else return value;
+                                } else {
+                                    return value;
+                                }
+                            },
+                            offset: 0
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#E7ECF7',
+                                maxRotation: 90,
+                                minRotation: 90,
+                                font: { size: 11, weight: 'normal' }
+                            },
+                            grid: { color: '#232B41' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: { color: '#8B93AA' },
+                            grid: { color: '#232B41' },
+                            title: { display: true, text: 'Quantity', color: '#8B93AA' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: {
+                                color: '#8B93AA',
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                    else if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+                                    else return value;
+                                }
+                            },
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Cost (BDT)', color: '#8B93AA' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // =========================================================================
+        // 7. VIEW SWITCHING & FILTERS
+        // =========================================================================
+        function setView(view) {
+            currentView = view;
+            const summaryDiv = document.getElementById('summaryView');
+            const breakdownDiv = document.getElementById('breakdownView');
+            if (view === 'summary') {
+                summaryDiv.classList.remove('hidden');
+                breakdownDiv.classList.add('hidden');
+                renderSummaryChart(currentFilter, currentMode);
+                updateSummary(currentFilter, currentMode);
+            } else {
+                summaryDiv.classList.add('hidden');
+                breakdownDiv.classList.remove('hidden');
+                if (!breakdownDiv.dataset.initialized) {
+                    populateBreakdownFilters();
+                    breakdownDiv.dataset.initialized = true;
+                } else {
+                    const month = document.getElementById('monthFilter').value;
+                    const factory = document.getElementById('factoryFilter').value;
+                    renderBreakdown(month, factory);
+                }
+            }
+            document.querySelectorAll('.view-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.view === view);
+            });
+        }
+
+        // ── Summary factory dropdown ──
+        function populateSummaryFactoryFilter() {
+            const sel = document.getElementById('summaryFactoryFilter');
+            sel.innerHTML = '';
+            const allOpt = document.createElement('option');
+            allOpt.value = 'all';
+            allOpt.textContent = 'All';
+            sel.appendChild(allOpt);
+            factories.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                sel.appendChild(opt);
+            });
+            sel.value = 'all';
+            sel.addEventListener('change', function() {
+                currentFilter = this.value;
+                if (currentView === 'summary') {
+                    renderSummaryChart(currentFilter, currentMode);
+                    updateSummary(currentFilter, currentMode);
+                }
+            });
+        }
+
+        // ── Breakdown filters ──
+        function populateBreakdownFilters() {
+            const monthSelect = document.getElementById('monthFilter');
+            const factorySelect = document.getElementById('factoryFilter');
+
+            monthSelect.innerHTML = '';
+            const allMonthOpt = document.createElement('option');
+            allMonthOpt.value = 'all';
+            allMonthOpt.textContent = 'All';
+            monthSelect.appendChild(allMonthOpt);
+            monthList.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                monthSelect.appendChild(opt);
+            });
+
+            factorySelect.innerHTML = '';
+            const allFacOpt = document.createElement('option');
+            allFacOpt.value = 'all';
+            allFacOpt.textContent = 'All';
+            factorySelect.appendChild(allFacOpt);
+            factories.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                factorySelect.appendChild(opt);
+            });
+
+            monthSelect.value = 'all';
+            factorySelect.value = 'all';
+
+            monthSelect.onchange = () => {
+                renderBreakdown(monthSelect.value, factorySelect.value);
+            };
+            factorySelect.onchange = () => {
+                renderBreakdown(monthSelect.value, factorySelect.value);
+            };
+
+            renderBreakdown('all', 'all');
+        }
+
+        // =========================================================================
+        // 8. EVENT BINDINGS
+        // =========================================================================
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                setView(this.dataset.view);
+            });
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMode = this.dataset.mode;
+                if (currentView === 'summary') {
+                    renderSummaryChart(currentFilter, currentMode);
+                    updateSummary(currentFilter, currentMode);
+                }
+            });
+        });
+
+        // =========================================================================
+        // 9. INIT
+        // =========================================================================
+        populateSummaryFactoryFilter();
+        setView('summary');
+    </script>
 </body>
 </html>
