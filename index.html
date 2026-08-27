@@ -157,7 +157,7 @@
         }
         .chart-container {
             position: relative;
-            height: 400px;
+            height: 550px; /* Increased from 400px */
         }
         .legend-note {
             margin-top: 12px;
@@ -288,7 +288,7 @@
                                 <select id="factoryFilter"></select>
                             </label>
                         </div>
-                        <div class="chart-container" style="height:500px;">
+                        <div class="chart-container" style="height:600px;"> <!-- Increased from 500px -->
                             <canvas id="breakdownChart"></canvas>
                         </div>
                         <div class="legend-note">Clustered columns: quantity (teal) and cost (amber) per machine.</div>
@@ -404,10 +404,6 @@
         // =========================================================================
         // 2. MACHINE BREAKDOWN DATA (unchanged, 2026 only)
         // =========================================================================
-        // [The machineNames, quantityData, costData, columnKeys etc. remain exactly as in your code.
-        //  To save space, I'm using the same arrays from your previous version.
-        //  They are identical to the ones you provided, so I will include them verbatim.]
-        // --- BEGIN machine breakdown data ---
         const machineNames = [
             "Single Needle Lock Stitch (Auto)",
             "Single Needle Lock Stitch (Needle Feed)",
@@ -625,7 +621,6 @@
             const order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return order.indexOf(a) - order.indexOf(b);
         });
-        // --- END machine breakdown data ---
 
         // =========================================================================
         // 3. STATE
@@ -635,13 +630,12 @@
         let currentView = 'summary';
 
         // =========================================================================
-        // 4. SUMMARY CHART – now supports 4 years in Actual mode
+        // 4. SUMMARY CHART – with overlapping label avoidance
         // =========================================================================
         const ctx = document.getElementById('revenueChart').getContext('2d');
         let summaryChart;
 
         function getDatasets(filter, mode) {
-            // Helper: get data for a given year and filter
             function getYearData(yearData) {
                 if (filter === 'all') {
                     return getTotals(yearData);
@@ -651,7 +645,6 @@
             }
 
             if (mode === 'projection') {
-                // Only 2025 and 2026 projected
                 const data25 = getYearData(y2025Padded);
                 const data26 = getYearData(y2026Projected);
                 return [{
@@ -679,7 +672,6 @@
                     },
                 }];
             } else {
-                // Actual mode: 2023, 2024, 2025, 2026
                 const d23 = getYearData(y2023Padded);
                 const d24 = getYearData(y2024Padded);
                 const d25 = getYearData(y2025Padded);
@@ -732,6 +724,7 @@
             const datasets = getDatasets(filter, mode);
             if (summaryChart) summaryChart.destroy();
             Chart.register(ChartDataLabels);
+
             summaryChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels: allMonths, datasets },
@@ -758,15 +751,17 @@
                         },
                         datalabels: {
                             anchor: 'end',
-                            align: 'end',
+                            align: function(context) {
+                                const idx = context.datasetIndex;
+                                return idx % 2 === 0 ? 'top' : 'bottom';
+                            },
                             color: '#E7ECF7',
                             font: { size: 10, weight: 'normal' },
                             formatter: function(value) {
                                 if (value === null || value === 0) return '';
-                                // Show 2 decimal places
                                 return (value / 1000000).toFixed(2) + 'M';
                             },
-                            offset: 1
+                            offset: 6
                         }
                     },
                     scales: {
@@ -774,7 +769,6 @@
                         y: {
                             ticks: {
                                 color: '#8B93AA',
-                                // Show 2 decimal places
                                 callback: value => 'BDT ' + (value / 1000000).toFixed(2) + 'M'
                             },
                             grid: { color: '#232B41' }
@@ -784,7 +778,6 @@
                 plugins: [ChartDataLabels]
             });
 
-            // Update subtitle and note
             const sub = document.getElementById('chartSub');
             const note = document.getElementById('chartNote');
             if (mode === 'projection') {
@@ -801,13 +794,13 @@
         }
 
         // =========================================================================
-        // 5. SUMMARY CARDS (unchanged: compare 2025 vs 2026)
+        // 5. SUMMARY CARDS
         // =========================================================================
         function updateSummary(filter, mode) {
             const container = document.getElementById('summaryStats');
             let sum2025, sum2026, label2025, label2026;
             if (mode === 'actual') {
-                const indices = [0, 1, 2, 3, 4, 5]; // Jan–Jun
+                const indices = [0, 1, 2, 3, 4, 5];
                 if (filter === 'all') {
                     sum2025 = indices.reduce((a, i) => a + (total2025[i] || 0), 0);
                     sum2026 = indices.reduce((a, i) => a + (total2026Actual[i] || 0), 0);
@@ -818,7 +811,6 @@
                 label2025 = '2025 Total (Jan–Jun)';
                 label2026 = '2026 Actual (Jan–Jun)';
             } else {
-                // projection: full year
                 if (filter === 'all') {
                     sum2025 = total2025.reduce((a, v) => a + (v || 0), 0);
                     sum2026 = total2026Projected.reduce((a, v) => a + (v || 0), 0);
@@ -1000,7 +992,6 @@
             });
         }
 
-        // ── Summary factory dropdown ──
         function populateSummaryFactoryFilter() {
             const sel = document.getElementById('summaryFactoryFilter');
             sel.innerHTML = '';
@@ -1024,7 +1015,6 @@
             });
         }
 
-        // ── Breakdown filters ──
         function populateBreakdownFilters() {
             const monthSelect = document.getElementById('monthFilter');
             const factorySelect = document.getElementById('factoryFilter');
