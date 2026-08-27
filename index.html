@@ -157,7 +157,7 @@
         }
         .chart-container {
             position: relative;
-            height: 550px; /* Increased from 400px */
+            height: 400px;
         }
         .legend-note {
             margin-top: 12px;
@@ -288,7 +288,7 @@
                                 <select id="factoryFilter"></select>
                             </label>
                         </div>
-                        <div class="chart-container" style="height:600px;"> <!-- Increased from 500px -->
+                        <div class="chart-container" style="height:500px;">
                             <canvas id="breakdownChart"></canvas>
                         </div>
                         <div class="legend-note">Clustered columns: quantity (teal) and cost (amber) per machine.</div>
@@ -725,6 +725,9 @@
             if (summaryChart) summaryChart.destroy();
             Chart.register(ChartDataLabels);
 
+            // Determine number of datasets
+            const numDatasets = datasets.length;
+
             summaryChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels: allMonths, datasets },
@@ -751,8 +754,10 @@
                         },
                         datalabels: {
                             anchor: 'end',
+                            // Alternate top/bottom to avoid overlap
                             align: function(context) {
                                 const idx = context.datasetIndex;
+                                // Even index -> top, odd -> bottom
                                 return idx % 2 === 0 ? 'top' : 'bottom';
                             },
                             color: '#E7ECF7',
@@ -761,7 +766,7 @@
                                 if (value === null || value === 0) return '';
                                 return (value / 1000000).toFixed(2) + 'M';
                             },
-                            offset: 6
+                            offset: 6 // extra spacing
                         }
                     },
                     scales: {
@@ -778,6 +783,7 @@
                 plugins: [ChartDataLabels]
             });
 
+            // Update subtitle and note
             const sub = document.getElementById('chartSub');
             const note = document.getElementById('chartNote');
             if (mode === 'projection') {
