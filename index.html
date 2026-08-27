@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
     <style>
+        /* ─── all styles unchanged ─── */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -106,7 +107,8 @@
         }
 
         .mode-card,
-        .view-card {
+        .view-card,
+        .chart-type-card {
             background: #111726;
             border: 1px solid #232B41;
             border-radius: 14px;
@@ -119,7 +121,8 @@
         }
 
         .mode-card .mode-label,
-        .view-card .view-label {
+        .view-card .view-label,
+        .chart-type-card .chart-type-label {
             font-size: 14px;
             font-weight: 600;
             color: #8B93AA;
@@ -128,13 +131,15 @@
         }
 
         .mode-btn-group,
-        .view-btn-group {
+        .view-btn-group,
+        .chart-type-btn-group {
             display: flex;
             gap: 8px;
         }
 
         .mode-btn,
-        .view-btn {
+        .view-btn,
+        .chart-type-btn {
             background: transparent;
             color: #8B93AA;
             border: 1px solid #232B41;
@@ -148,13 +153,15 @@
         }
 
         .mode-btn:hover,
-        .view-btn:hover {
+        .view-btn:hover,
+        .chart-type-btn:hover {
             color: #E7ECF7;
             background: rgba(47, 217, 196, 0.08);
         }
 
         .mode-btn.active,
-        .view-btn.active {
+        .view-btn.active,
+        .chart-type-btn.active {
             background: #2FD9C4;
             color: #0A0E1A;
             border-color: #2FD9C4;
@@ -182,7 +189,7 @@
 
         .chart-container {
             position: relative;
-            height: 400px;
+            height: 550px;
         }
 
         .legend-note {
@@ -243,13 +250,15 @@
             }
 
             .mode-card,
-            .view-card {
+            .view-card,
+            .chart-type-card {
                 flex-direction: column;
                 align-items: stretch;
             }
 
             .mode-btn-group,
-            .view-btn-group {
+            .view-btn-group,
+            .chart-type-btn-group {
                 justify-content: center;
             }
 
@@ -339,6 +348,27 @@
 
                         <button class="mode-btn" data-mode="projection">
                             Projected monthly cost
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Chart Type -->
+
+                <div class="chart-type-card">
+
+                    <span class="chart-type-label">📈 Chart Type</span>
+
+                    <div class="chart-type-btn-group" id="chartTypeGroup">
+
+                        <button class="chart-type-btn active" data-chart="monthly">
+                            Monthly
+                        </button>
+
+                        <button class="chart-type-btn" data-chart="yearly">
+                            Yearly
                         </button>
 
                     </div>
@@ -973,9 +1003,11 @@ let currentMode = 'actual';
 
 let currentView = 'summary';
 
+let currentChartType = 'monthly';   // 'monthly' or 'yearly'
+
 
 /* =========================================================================
-   4. SUMMARY CHART
+   4. SUMMARY CHARTS
    ========================================================================= */
 
 const ctx =
@@ -986,7 +1018,7 @@ let summaryChart;
 
 
 /* =========================================================================
-   DATASETS
+   DATASETS FOR MONTHLY LINE CHART
    ========================================================================= */
 
 function getDatasets(filter, mode) {
@@ -1197,10 +1229,10 @@ function getDatasets(filter, mode) {
 
 
 /* =========================================================================
-   RENDER SUMMARY CHART
+   RENDER MONTHLY LINE CHART
    ========================================================================= */
 
-function renderSummaryChart(filter, mode) {
+function renderMonthlyChart(filter, mode) {
 
     const datasets =
         getDatasets(filter, mode);
@@ -1296,32 +1328,12 @@ function renderSummaryChart(filter, mode) {
                 },
 
 
-                /* =========================================================
-                   FIXED DATA LABEL SECTION
-                   ========================================================= */
-
                 datalabels: {
 
-                    /*
-                     * Automatically hide labels that overlap.
-                     *
-                     * This is the main fix for the overlapping
-                     * Monthly Cost labels.
-                     */
                     display: 'auto',
 
-
-                    /*
-                     * Keep labels attached to the end of
-                     * each point.
-                     */
                     anchor: 'end',
 
-
-                    /*
-                     * Alternate label direction between
-                     * datasets for additional separation.
-                     */
                     align: function(context) {
 
                         const idx =
@@ -1336,7 +1348,6 @@ function renderSummaryChart(filter, mode) {
 
                     color: '#E7ECF7',
 
-
                     font: {
 
                         size: 10,
@@ -1348,10 +1359,6 @@ function renderSummaryChart(filter, mode) {
 
                     formatter: function(value) {
 
-                        /*
-                         * Do not show labels for
-                         * null or zero values.
-                         */
                         if (
                             value === null ||
                             value === 0
@@ -1431,11 +1438,186 @@ function renderSummaryChart(filter, mode) {
 
     });
 
+}
 
-    /* =========================================================
-       UPDATE SUBTITLE AND NOTE
-       ========================================================= */
 
+/* =========================================================================
+   RENDER YEARLY COLUMN CHART (with projection support)
+   ========================================================================= */
+
+function renderYearlyChart(filter, mode) {
+
+    // Helper to get total for a given yearData (full 12 months)
+    function getFullYearTotal(yearData) {
+        if (filter === 'all') {
+            let sum = 0;
+            for (let i = 0; i < 12; i++) {
+                sum += getTotals(yearData)[i] || 0;
+            }
+            return sum;
+        } else {
+            let sum = 0;
+            for (let i = 0; i < 12; i++) {
+                sum += yearData[filter][i] || 0;
+            }
+            return sum;
+        }
+    }
+
+    // Helper to get Jan–Jun total (used for 2026 in actual mode)
+    function getJanJunTotal(yearData) {
+        const indices = [0,1,2,3,4,5];
+        if (filter === 'all') {
+            let sum = 0;
+            for (let i of indices) {
+                sum += getTotals(yearData)[i] || 0;
+            }
+            return sum;
+        } else {
+            let sum = 0;
+            for (let i of indices) {
+                sum += yearData[filter][i] || 0;
+            }
+            return sum;
+        }
+    }
+
+    // 2023, 2024, 2025 always use full year
+    const total2023full = getFullYearTotal(y2023Padded);
+    const total2024full = getFullYearTotal(y2024Padded);
+    const total2025full = getFullYearTotal(y2025Padded);
+
+    // 2026 depends on mode
+    let total2026;
+    let label2026;
+    if (mode === 'projection') {
+        // Use projected full year (Jun copied to Jul–Dec)
+        total2026 = getFullYearTotal(y2026Projected);
+        label2026 = 'Projected';
+    } else {
+        // Actual: only Jan–Jun available
+        total2026 = getJanJunTotal(y2026Actual);
+        label2026 = 'Actual (Jan–Jun)';
+    }
+
+    const years = ['2023', '2024', '2025', '2026'];
+    const data = [total2023full, total2024full, total2025full, total2026];
+
+    if (summaryChart) {
+        summaryChart.destroy();
+    }
+
+    Chart.register(ChartDataLabels);
+
+    summaryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [{
+                label: 'Yearly Cost',
+                data: data,
+                backgroundColor: [
+                    'rgba(139,147,170,0.8)',
+                    'rgba(108,92,231,0.8)',
+                    'rgba(47,217,196,0.8)',
+                    'rgba(245,184,77,0.8)'
+                ],
+                borderColor: [
+                    '#8B93AA',
+                    '#6C5CE7',
+                    '#2FD9C4',
+                    '#F5B84D'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            label += new Intl.NumberFormat('en-IN', {
+                                style: 'currency',
+                                currency: 'BDT',
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            }).format(context.parsed.y);
+                            return label;
+                        }
+                    }
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    color: '#E7ECF7',
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    formatter: function(value) {
+                        if (value === 0) return '';
+                        return (value / 1000000).toFixed(2) + 'M';
+                    },
+                    offset: 4
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#E7ECF7',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: '#232B41'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#8B93AA',
+                        callback: value => 'BDT ' + (value / 1000000).toFixed(2) + 'M'
+                    },
+                    grid: {
+                        color: '#232B41'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Total Cost (BDT)',
+                        color: '#8B93AA'
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    // Store the 2026 label for later use in subtitle
+    window._yearly2026Label = label2026;
+}
+
+
+/* =========================================================================
+   RENDER CHART BASED ON TYPE
+   ========================================================================= */
+
+function renderSummaryChart(filter, mode) {
+
+    if (currentChartType === 'monthly') {
+        renderMonthlyChart(filter, mode);
+    } else {
+        renderYearlyChart(filter, mode);
+    }
+
+    // Update subtitle and note
     const sub =
         document.getElementById('chartSub');
 
@@ -1446,8 +1628,9 @@ function renderSummaryChart(filter, mode) {
     if (mode === 'projection') {
 
         sub.textContent =
-            '2025 vs 2026 (Projected: Jul–Dec = Jun)';
-
+            currentChartType === 'monthly'
+                ? '2025 vs 2026 (Projected: Jul–Dec = Jun)'
+                : 'Yearly Cost (Full Year) – Projected';
 
         note.textContent =
             filter === 'all'
@@ -1457,8 +1640,9 @@ function renderSummaryChart(filter, mode) {
     } else {
 
         sub.textContent =
-            '2023–2026 (Actual)';
-
+            currentChartType === 'monthly'
+                ? '2023–2026 (Actual)'
+                : 'Yearly Cost – Actual (2026: Jan–Jun)';
 
         note.textContent =
             filter === 'all'
@@ -1467,6 +1651,13 @@ function renderSummaryChart(filter, mode) {
 
     }
 
+    // Update card title
+    const titleElem = document.querySelector('.card .card-title');
+    if (currentChartType === 'monthly') {
+        titleElem.textContent = 'Monthly Cost (BDT)';
+    } else {
+        titleElem.textContent = 'Yearly Cost (BDT)';
+    }
 }
 
 
@@ -2499,6 +2690,53 @@ document
     });
 
 
+/* ---- Chart Type toggle ---- */
+
+document
+    .querySelectorAll('.chart-type-btn')
+    .forEach(btn => {
+
+        btn.addEventListener(
+            'click',
+            function() {
+
+                document
+                    .querySelectorAll('.chart-type-btn')
+                    .forEach(b =>
+                        b.classList.remove(
+                            'active'
+                        )
+                    );
+
+
+                this.classList.add(
+                    'active'
+                );
+
+
+                currentChartType =
+                    this.dataset.chart; // 'monthly' or 'yearly'
+
+
+                if (
+                    currentView === 'summary'
+                ) {
+
+                    renderSummaryChart(
+                        currentFilter,
+                        currentMode
+                    );
+
+                    // summary cards don't change, so no update needed
+
+                }
+
+            }
+        );
+
+    });
+
+
 /* =========================================================================
    9. INIT
    ========================================================================= */
@@ -2511,4 +2749,3 @@ setView('summary');
 
 </body>
 </html>
-```
